@@ -1,0 +1,145 @@
+.pageHeader {
+  padding: 108px 5vw 48px;
+  background: linear-gradient(135deg, var(--cream), #e8f5e9);
+}
+.backLink {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-muted); font-size: 0.85rem; font-weight: 600;
+  margin-bottom: 20px; transition: var(--transition); text-decoration: none;
+}
+.backLink:hover { color: var(--green); }
+.batchId {
+  font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 900; color: var(--green-dark); margin: 12px 0 10px;
+  font-style: italic;
+}
+
+.layout { display: grid; grid-template-columns: 1fr 380px; gap: 32px; align-items: start; }
+
+/* REPORT CARD */
+.reportCard {
+  background: #fff; border-radius: var(--radius-xl); padding: 36px;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-bottom: 24px;
+}
+.reportEmoji { font-size: 5rem; margin-bottom: 20px; display: block; }
+.reportHeader {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 14px; gap: 16px; flex-wrap: wrap;
+}
+.cropName { font-size: 1.6rem; color: var(--green-dark); margin-bottom: 8px; }
+.categoryBadge, .organicBadge {
+  display: inline-block; border-radius: var(--radius-pill);
+  padding: 3px 12px; font-size: 0.72rem; font-weight: 700; margin-right: 6px;
+}
+.categoryBadge { background: var(--cream-dark); color: var(--green-dark); }
+.organicBadge { background: #e8f5e9; color: var(--green); }
+.priceTag { text-align: right; }
+.price { font-family: var(--font-display); font-size: 2.4rem; font-weight: 900; color: var(--green); }
+.perKg { font-size: 1rem; color: var(--text-muted); }
+.description { font-size: 0.9rem; margin-bottom: 28px; line-height: 1.75; font-style: italic; border-left: 3px solid var(--green-light); padding-left: 14px; }
+
+.dataGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+.dataRow {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--cream); border-radius: var(--radius-md); padding: 14px;
+}
+.dataIcon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+.dataLabel { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 2px; }
+.dataValue { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+.stockSection {}
+.stockHeader { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.stockLabel { font-weight: 600; font-size: 0.84rem; color: var(--text); }
+.stockNumbers { font-size: 0.78rem; color: var(--text-muted); }
+.stockTrack {
+  height: 20px; background: #c8e6c9; border-radius: 10px;
+  overflow: hidden; margin-bottom: 8px;
+}
+.stockFill {
+  height: 100%; background: var(--green); border-radius: 10px;
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 10px;
+  transition: width 0.8s ease;
+}
+.soldLabel { font-size: 0.68rem; font-weight: 700; color: #fff; }
+.stockLegend { display: flex; gap: 16px; font-size: 0.72rem; color: var(--text-muted); align-items: center; margin-bottom: 20px; }
+.soldDot, .availDot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 4px;
+}
+.soldDot { background: var(--green); }
+.availDot { background: #c8e6c9; }
+
+/* TIMELINE */
+.timelineCard {
+  background: #fff; border-radius: var(--radius-xl); padding: 32px;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.timelineTitle { font-size: 1rem; color: var(--green-dark); margin-bottom: 24px; }
+.timelineRow {
+  display: flex; gap: 16px; align-items: flex-start; padding-bottom: 20px;
+  border-left: 2px solid var(--cream-dark); margin-left: 48px; position: relative;
+  padding-left: 20px;
+}
+.timelineRow:last-child { border-left: none; padding-bottom: 0; }
+.timelineTime {
+  position: absolute; left: -64px; top: 0; width: 56px; text-align: right;
+  font-size: 0.72rem; font-weight: 700; color: var(--green); white-space: nowrap;
+}
+.timelineDot {
+  position: absolute; left: -5px; top: 4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+}
+.timelineLabel { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+.timelineDesc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+/* FARMER CARD */
+.farmerCard {
+  background: #fff; border-radius: var(--radius-xl); padding: 28px;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-bottom: 20px;
+}
+.farmerTop { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+.farmerAvatar {
+  width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--green), var(--green-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; border: 3px solid var(--cream-dark);
+}
+.farmerVerified { font-size: 0.7rem; font-weight: 700; color: var(--green); margin-bottom: 2px; }
+.farmerName { font-size: 1.1rem; color: var(--text); margin-bottom: 3px; }
+.farmerVillage { font-size: 0.78rem; color: var(--text-muted); }
+.farmerStats {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
+  background: var(--cream); border-radius: var(--radius-md); padding: 14px; margin-bottom: 18px;
+}
+.farmerStat { text-align: center; }
+.fStatVal { display: block; font-family: var(--font-display); font-size: 1.1rem; font-weight: 900; color: var(--green-dark); }
+.fStatLbl { font-size: 0.65rem; color: var(--text-muted); }
+.farmerStory { font-size: 0.82rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+.viewFarmer {
+  display: block; width: 100%; padding: 11px; text-align: center;
+  border: 1.5px solid var(--green); border-radius: var(--radius-pill);
+  color: var(--green); font-size: 0.84rem; font-weight: 600;
+  text-decoration: none; transition: var(--transition);
+}
+.viewFarmer:hover { background: var(--green); color: #fff; }
+
+/* TRUST */
+.trustCard {
+  background: var(--cream); border-radius: var(--radius-xl); padding: 28px;
+}
+.trustTitle { font-size: 0.9rem; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+.trustRow { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+.trustRow:last-child { margin-bottom: 0; }
+.trustIcon {
+  width: 38px; height: 38px; border-radius: 10px; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.trustLabel { font-size: 0.84rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.trustDesc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .dataGrid { grid-template-columns: 1fr; }
+}

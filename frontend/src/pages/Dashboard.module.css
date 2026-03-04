@@ -1,0 +1,163 @@
+.dashHeader {
+  padding: 100px 5vw 32px;
+  background: var(--green-dark);
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 24px;
+}
+.headerLeft { display: flex; gap: 18px; align-items: center; }
+.avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); font-size: 2.2rem;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.greet { color: rgba(255,255,255,0.6); font-size: 0.82rem; }
+.username { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; color: #fff; margin: 2px 0; }
+.phone { color: rgba(255,255,255,0.5); font-size: 0.82rem; }
+.headerCards { display: flex; gap: 12px; flex-wrap: wrap; }
+.miniCard {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-md); padding: 14px 20px; text-align: center; min-width: 130px;
+}
+.miniVal {
+  display: block; font-family: var(--font-display); font-size: 1.2rem;
+  font-weight: 900; color: var(--green-light);
+}
+.miniLbl { font-size: 0.68rem; color: rgba(255,255,255,0.5); margin-top: 2px; display: block; }
+
+.tabBar {
+  display: flex; gap: 4px; padding: 12px 5vw;
+  background: #fff; border-bottom: 1px solid var(--border);
+  overflow-x: auto; flex-wrap: nowrap;
+}
+.tab {
+  padding: 9px 20px; border-radius: var(--radius-pill);
+  font-size: 0.85rem; font-weight: 600; border: none;
+  background: none; color: var(--text-muted); cursor: pointer;
+  transition: var(--transition); white-space: nowrap;
+  font-family: var(--font-body);
+}
+.tab:hover { color: var(--green); background: var(--cream); }
+.tabActive { background: var(--green); color: #fff; }
+
+.sectionTitle { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+
+/* Orders */
+.ordersList { display: flex; flex-direction: column; gap: 14px; }
+.orderCard {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+}
+.orderTop { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.orderId { font-weight: 700; color: var(--green); font-size: 0.92rem; }
+.orderDate { font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; }
+.orderItems { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.orderItem {
+  background: var(--cream); border-radius: var(--radius-pill);
+  padding: 3px 12px; font-size: 0.74rem; color: var(--text-muted); font-weight: 500;
+}
+.orderBottom { display: flex; justify-content: space-between; align-items: center; }
+.orderTotal { font-weight: 700; font-size: 1rem; color: var(--text); }
+.trackLink {
+  font-size: 0.82rem; font-weight: 600; color: var(--green);
+  text-decoration: none; transition: var(--transition);
+}
+.trackLink:hover { color: var(--green-dark); }
+
+/* Subscription */
+.subWrap { max-width: 680px; }
+.subCard {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 32px;
+}
+.subCardTop {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+}
+.subPlanName { font-family: var(--font-display); font-size: 1.4rem; font-weight: 900; color: var(--text); }
+.subStatus { font-size: 0.8rem; color: var(--green); font-weight: 600; margin-top: 4px; }
+.subPrice { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--green); }
+.subPrice span { font-family: var(--font-body); font-size: 0.9rem; font-weight: 400; color: var(--text-muted); }
+.subDetails { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+.subRow { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.subRow span { font-size: 0.84rem; color: var(--text-muted); }
+.subRow strong { font-size: 0.84rem; color: var(--text); text-align: right; }
+.subBtns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* Wallet */
+.walletWrap { max-width: 600px; }
+.walletBal {
+  background: var(--green-dark); border-radius: var(--radius-xl);
+  padding: 40px; text-align: center; margin-bottom: 28px;
+}
+.walletBalLbl { color: rgba(255,255,255,0.6); font-size: 0.84rem; }
+.walletBalAmt { font-family: var(--font-display); font-size: 3.5rem; font-weight: 900; color: var(--green-light); margin: 8px 0; }
+.walletBalNote { color: rgba(255,255,255,0.5); font-size: 0.78rem; }
+.walletTxns {}
+.txnRow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 0; border-bottom: 1px solid var(--cream-dark); gap: 16px;
+}
+.txnDesc { font-size: 0.86rem; font-weight: 500; color: var(--text); }
+.txnDate { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.txnAmt { font-weight: 700; font-size: 0.95rem; }
+.credit { color: var(--green); }
+.debit { color: #e53935; }
+
+/* Referrals */
+.refWrap { max-width: 600px; }
+.refCard {
+  background: var(--cream); border-radius: var(--radius-xl); padding: 40px;
+  text-align: center; margin-bottom: 24px;
+}
+.refEmoji { font-size: 3rem; margin-bottom: 16px; }
+.refCard h3 { color: var(--green-dark); margin-bottom: 10px; }
+.refCard p { margin-bottom: 28px; }
+.refCode {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; background: #fff; border-radius: var(--radius-pill);
+  padding: 14px 20px; border: 1px solid var(--border);
+}
+.refCodeText { font-family: var(--font-display); font-size: 1.3rem; font-weight: 900; color: var(--green); letter-spacing: 2px; }
+.copyBtn {
+  background: var(--green); color: #fff; border: none;
+  border-radius: var(--radius-pill); padding: 7px 18px;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition);
+  font-family: var(--font-body);
+}
+.copyBtn:hover { background: var(--green-dark); }
+.refStats { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.refStat {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 20px; text-align: center;
+}
+.refStatVal { display: block; font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; color: var(--green-dark); }
+.refStatLbl { font-size: 0.74rem; color: var(--text-muted); }
+
+/* Addresses */
+.addrWrap { max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
+.addrCard {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+}
+.addrDefault { border-color: var(--green); }
+.addrTopRow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.addrType { font-weight: 700; font-size: 0.88rem; color: var(--text); }
+.addrDefaultBadge { background: var(--green); color: #fff; border-radius: var(--radius-pill); padding: 2px 10px; font-size: 0.68rem; font-weight: 700; }
+.addrText { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
+.addrActions {}
+.addrEdit {
+  font-size: 0.82rem; font-weight: 600; color: var(--green);
+  background: none; border: 1px solid var(--green); border-radius: var(--radius-pill);
+  padding: 6px 18px; cursor: pointer; transition: var(--transition);
+  font-family: var(--font-body);
+}
+.addrEdit:hover { background: var(--green); color: #fff; }
+.addAddrBtn {
+  padding: 14px; border-radius: var(--radius-lg);
+  border: 2px dashed var(--border); background: none;
+  font-size: 0.88rem; font-weight: 600; color: var(--text-muted);
+  cursor: pointer; transition: var(--transition);
+  font-family: var(--font-body);
+}
+.addAddrBtn:hover { border-color: var(--green); color: var(--green); }

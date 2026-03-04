@@ -1,0 +1,128 @@
+.pageHeader {
+  padding: 108px 5vw 56px;
+  background: linear-gradient(135deg, var(--green-dark), #2e7d32);
+  color: #fff;
+}
+.pageHeader .tag { background: rgba(255,255,255,0.15); color: #c8e6c9; }
+.pageTitle { color: #fff; margin: 14px 0 12px; }
+.pageHeader p { color: rgba(255,255,255,0.7); }
+
+.steps {
+  display: flex; align-items: center; justify-content: center;
+  padding: 28px 5vw; background: #fff;
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+.step { display: flex; align-items: center; gap: 10px; }
+.stepNum {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.88rem; font-weight: 700;
+  background: var(--cream-dark); color: var(--text-muted);
+  transition: var(--transition);
+}
+.stepActive .stepNum { background: var(--green); color: #fff; }
+.stepDone .stepNum { background: var(--green-dark); color: #fff; }
+.stepLabel { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+.stepActive .stepLabel, .stepDone .stepLabel { color: var(--green); }
+.stepLine { width: 60px; height: 2px; background: var(--cream-dark); margin: 0 12px; }
+
+.plansGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+.planCard {
+  background: #fff; border-radius: var(--radius-xl); padding: 36px 28px;
+  border: 2px solid var(--border); cursor: pointer;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  position: relative;
+}
+.planCard:hover { transform: translateY(-4px); border-color: var(--green-light); }
+.planSelected { border-color: var(--green); box-shadow: 0 0 0 4px rgba(46,125,50,0.12); }
+.planFeatured { border-color: var(--green); }
+.planBadge {
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  background: var(--green); color: #fff;
+  border-radius: var(--radius-pill); padding: 5px 18px;
+  font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+}
+.planIcon { font-size: 2.8rem; margin-bottom: 14px; }
+.planName { font-size: 1.15rem; color: var(--text); margin-bottom: 8px; }
+.planPrice {
+  font-family: var(--font-display); font-size: 2.6rem; font-weight: 900;
+  color: var(--green); margin-bottom: 4px;
+}
+.planPrice span { font-family: var(--font-body); font-size: 1rem; font-weight: 400; color: var(--text-muted); }
+.planMeta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px; }
+.planFeatures { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.planFeatures li { display: flex; gap: 8px; align-items: flex-start; font-size: 0.86rem; color: var(--text-muted); }
+.checkmark { color: var(--green); font-weight: 700; flex-shrink: 0; }
+.selectIndicator {
+  width: 100%; padding: 10px; border-radius: var(--radius-pill); text-align: center;
+  font-size: 0.85rem; font-weight: 600;
+  border: 1.5px solid var(--border); color: var(--text-muted); transition: var(--transition);
+}
+.selectIndicatorActive { background: var(--green); color: #fff; border-color: var(--green); }
+
+.bottomBar {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--cream); border-radius: var(--radius-lg); padding: 20px 28px;
+  flex-wrap: wrap; gap: 16px;
+}
+.selectedSummary { font-size: 0.9rem; color: var(--text-muted); }
+.selectedSummary strong { color: var(--green); }
+
+/* Form */
+.formWrap { max-width: 680px; margin: 0 auto; }
+.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.formGroup { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.label { font-size: 0.84rem; font-weight: 600; color: var(--text); }
+.input, .textarea {
+  padding: 13px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 0.9rem; color: var(--text);
+  background: #fff; transition: border-color 0.2s; outline: none; resize: vertical;
+}
+.input:focus, .textarea:focus { border-color: var(--green); }
+.slotGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.slotBtn {
+  padding: 14px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border);
+  background: #fff; cursor: pointer; text-align: center; transition: var(--transition);
+  font-family: var(--font-body); display: flex; flex-direction: column; gap: 4px;
+}
+.slotBtn:hover { border-color: var(--green); }
+.slotActive { border-color: var(--green); background: var(--green-pale); }
+.slotLabel { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.slotSub { font-size: 0.72rem; color: var(--text-muted); }
+.formBtns { display: flex; gap: 14px; justify-content: flex-end; margin-top: 28px; }
+
+/* Confirm */
+.confirmWrap { max-width: 560px; margin: 0 auto; }
+.confirmCard {
+  background: var(--cream); border-radius: var(--radius-lg);
+  border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px;
+}
+.confirmRow {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  font-size: 0.88rem; gap: 16px;
+}
+.confirmRow span { color: var(--text-muted); }
+.confirmRow strong { color: var(--text); text-align: right; max-width: 280px; }
+.confirmRow:last-child { border-bottom: none; }
+.confirmTotal span, .confirmTotal strong { font-size: 1rem; }
+.guarantee {
+  background: #e8f5e9; border-radius: var(--radius-md); padding: 14px 20px;
+  font-size: 0.85rem; font-weight: 500; color: var(--green-dark); margin-bottom: 24px;
+}
+.paymentLabel { font-size: 0.84rem; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+.paymentBtns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+.payBtn {
+  padding: 11px 20px; border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border); background: #fff;
+  font-size: 0.84rem; font-weight: 600; color: var(--text);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.payBtn:hover { border-color: var(--green); color: var(--green); }
+
+@media (max-width: 768px) {
+  .plansGrid { grid-template-columns: 1fr; }
+  .formGrid { grid-template-columns: 1fr; }
+  .slotGrid { grid-template-columns: 1fr; }
+}
