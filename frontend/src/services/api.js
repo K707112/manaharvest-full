@@ -1,7 +1,8 @@
 // src/services/api.js
 // Central file for all backend API calls
 
-const BASE = '/api/v1'
+const BASE = (import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1')
+
 
 // ── Core request helper ─────────────────────────────────────
 async function request(path, options = {}) {
