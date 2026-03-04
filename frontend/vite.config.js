@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base:"/manaharvest-full/",
   plugins: [react()],
+  base:"/manaharvest-full/"
   server: {
     proxy: {
       '/api': {
