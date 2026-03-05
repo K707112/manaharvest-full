@@ -1,10 +1,11 @@
 // src/controllers/auth.controller.js
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
+import twilio from 'twilio'
 import { supabaseAdmin } from '../config/supabase.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { generateReferralCode } from '../utils/helpers.js'
 import { logger } from '../utils/logger.js'
-import twilio from 'twilio'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
@@ -12,7 +13,7 @@ const twilioClient = twilio(
 )
 
 // In-memory OTP store (swap with Redis in production)
-const otpStore = new Map()  // phone → { otp, expiresAt, attempts }
+const otpStore = new Map()
 const OTP_TTL = 5 * 60 * 1000  // 5 minutes
 
 function generateOtp() {
@@ -45,29 +46,28 @@ export async function sendOtp(req, res, next) {
       attempts:  0,
     })
 
-    // TODO: Replace with real SMS gateway (Twilio / MSG91)
-    // await smsService.send(phone, `Your ManaHarvest OTP is ${otp}`)
+    // Send SMS via Twilio
     await twilioClient.messages.create({
-  body: `Your ManaHarvest OTP is ${otp}. Valid for 5 minutes.`,
-  from: process.env.TWILIO_PHONE_NUMBER,
-  to:   `+91${phone}`
-})
+      body: `Your ManaHarvest OTP is ${otp}. Valid for 5 minutes.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to:   `+91${phone}`
+    })
 
-logger.info(`OTP sent to ${phone}`)
+    logger.info(`OTP sent to ${phone}`)
 
-res.json({
-  success: true,
-  message: 'OTP sent successfully',
-})
+    res.json({
+      success: true,
+      message: 'OTP sent successfully',
+    })
   } catch (err) {
     next(err)
   }
 }
 
-// POST /auth/otp/verify
+// POST /auth/otp/verify — signup with OTP + password
 export async function verifyOtp(req, res, next) {
   try {
-    const { phone, otp, name, referral_code } = req.body
+    const { phone, otp, name, password, referral_code } = req.body
 
     const record = otpStore.get(phone)
     if (!record) throw new AppError('OTP not found or expired', 400, 'OTP_NOT_FOUND')
@@ -83,14 +83,15 @@ export async function verifyOtp(req, res, next) {
 
     otpStore.delete(phone)
 
-    // Upsert user
-    let { data: user, error } = await supabaseAdmin
+    // Check if user already exists
+    let { data: user } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('phone', phone)
       .single()
 
     let isNewUser = false
+
     if (!user) {
       isNewUser = true
       let referrerId = null
@@ -104,11 +105,15 @@ export async function verifyOtp(req, res, next) {
         referrerId = referrer?.id || null
       }
 
+      // Hash password before saving
+      const hashedPassword = password ? await bcrypt.hash(password, 10) : null
+
       const { data: newUser, error: createErr } = await supabaseAdmin
         .from('users')
         .insert({
           phone,
           name:          name || 'ManaHarvest Customer',
+          password_hash: hashedPassword,
           referral_code: generateReferralCode(),
           referred_by:   referrerId,
         })
@@ -118,7 +123,6 @@ export async function verifyOtp(req, res, next) {
       if (createErr) throw createErr
       user = newUser
 
-      // Credit referrer bonus if applicable
       if (referrerId) {
         await supabaseAdmin.from('referrals').insert({
           referrer_id: referrerId,
@@ -127,7 +131,6 @@ export async function verifyOtp(req, res, next) {
       }
     }
 
-    // Update last login
     await supabaseAdmin
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
@@ -139,10 +142,54 @@ export async function verifyOtp(req, res, next) {
       success: true,
       is_new_user: isNewUser,
       user: {
-        id:   user.id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
+        id:             user.id,
+        name:           user.name,
+        phone:          user.phone,
+        role:           user.role,
+        wallet_balance: user.wallet_balance,
+        referral_code:  user.referral_code,
+      },
+      tokens: { access, refresh },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /auth/login — login with phone + password
+export async function loginWithPassword(req, res, next) {
+  try {
+    const { phone, password } = req.body
+
+    if (!phone || !password) throw new AppError('Phone and password required', 400)
+
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('phone', phone)
+      .single()
+
+    if (!user) throw new AppError('No account found with this phone number', 404)
+
+    if (!user.password_hash) throw new AppError('Please sign up first or use OTP login', 400)
+
+    const isMatch = await bcrypt.compare(password, user.password_hash)
+    if (!isMatch) throw new AppError('Wrong password', 401)
+
+    await supabaseAdmin
+      .from('users')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', user.id)
+
+    const { access, refresh } = signTokens(user.id)
+
+    res.json({
+      success: true,
+      user: {
+        id:             user.id,
+        name:           user.name,
+        phone:          user.phone,
+        role:           user.role,
         wallet_balance: user.wallet_balance,
         referral_code:  user.referral_code,
       },
@@ -178,7 +225,5 @@ export async function refreshToken(req, res, next) {
 
 // POST /auth/logout
 export async function logout(req, res) {
-  // With stateless JWT, logout is handled client-side (discard tokens)
-  // For a blacklist, store JWT jti in Redis here
   res.json({ success: true, message: 'Logged out successfully' })
 }

@@ -31,13 +31,25 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const verifyOtp = async (phone, otp, name) => {
+  const verifyOtp = async (phone, otp, name, password) => {
     try {
-      const res = await authAPI.verifyOtp(phone, otp, name)
+      const res = await authAPI.verifyOtp(phone, otp, name, password)
       localStorage.setItem('token', res.tokens.access)
       localStorage.setItem('refresh_token', res.tokens.refresh)
       setUser(res.user)
       return { success: true, isNewUser: res.is_new_user }
+    } catch (err) {
+      return { success: false, message: err.message }
+    }
+  }
+
+  const loginWithPassword = async (phone, password) => {
+    try {
+      const res = await authAPI.loginWithPassword(phone, password)
+      localStorage.setItem('token', res.tokens.access)
+      localStorage.setItem('refresh_token', res.tokens.refresh)
+      setUser(res.user)
+      return { success: true }
     } catch (err) {
       return { success: false, message: err.message }
     }
@@ -82,7 +94,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, sendOtp, verifyOtp, logout,
+      user, sendOtp, verifyOtp, loginWithPassword, logout,
       cart, addToCart, removeFromCart, updateCartQty,
       cartCount, cartTotal
     }}>

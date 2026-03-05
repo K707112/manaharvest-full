@@ -1,47 +1,63 @@
-// src/pages/Login.jsx — updated to use real OTP auth
+// src/pages/Login.jsx — with password support
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Leaf, Phone, ArrowRight, CheckCircle } from 'lucide-react'
+import { Leaf, Phone, ArrowRight, CheckCircle, Eye, EyeOff, Lock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
-  const [mode, setMode] = useState('login')  // login | register | otp
-  const [form, setForm] = useState({ name: '', phone: '' })
-  const [otp, setOtp]   = useState(['', '', '', '', '', ''])
-  const [devOtp, setDevOtp] = useState('')   // shown in dev mode only
+  const [mode, setMode]     = useState('login')  // login | register | otp
+  const [form, setForm]     = useState({ name: '', phone: '', password: '' })
+  const [otp, setOtp]       = useState(['', '', '', '', '', ''])
+  const [showPass, setShowPass] = useState(false)
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
-  const { sendOtp, verifyOtp } = useAuth()
+  const { sendOtp, verifyOtp, loginWithPassword } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
   const from      = location.state?.from || '/dashboard'
 
   const update = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  // Step 1: send OTP
-  const handleSendOtp = async (e) => {
+  // LOGIN with password
+  const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
     if (!form.phone || form.phone.length < 10) { setError('Enter a valid 10-digit mobile number.'); return }
-    if (mode === 'register' && !form.name.trim()) { setError('Please enter your name.'); return }
+    if (!form.password) { setError('Enter your password.'); return }
+    setLoading(true)
+    const res = await loginWithPassword(form.phone, form.password)
+    setLoading(false)
+    if (res.success) {
+      navigate(from, { replace: true })
+    } else {
+      setError(res.message || 'Wrong phone or password.')
+    }
+  }
+
+  // SIGNUP: Step 1 — send OTP
+  const handleSendOtp = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (!form.name.trim()) { setError('Please enter your name.'); return }
+    if (!form.phone || form.phone.length < 10) { setError('Enter a valid 10-digit mobile number.'); return }
+    if (!form.password || form.password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
     const res = await sendOtp(form.phone)
     setLoading(false)
     if (res.success) {
-      if (res.otp) setDevOtp(res.otp)   // dev mode: backend returns OTP
       setMode('otp')
     } else {
       setError(res.message || 'Failed to send OTP. Try again.')
     }
   }
 
-  // Step 2: verify OTP
+  // SIGNUP: Step 2 — verify OTP
   const handleVerifyOtp = async (e) => {
     e.preventDefault()
     const otpStr = otp.join('')
     if (otpStr.length < 6) { setError('Enter the 6-digit OTP'); return }
     setLoading(true)
-    const res = await verifyOtp(form.phone, otpStr, form.name)
+    const res = await verifyOtp(form.phone, otpStr, form.name, form.password)
     setLoading(false)
     if (res.success) {
       navigate(from, { replace: true })
@@ -108,22 +124,11 @@ export default function Login() {
           </div>
         )}
 
-        {/* Login / Register Form */}
-        {mode !== 'otp' && (
-          <form onSubmit={handleSendOtp}>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
-              {mode === 'login' ? 'Welcome back!' : 'Join ManaHarvest'}
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 28 }}>
-              {mode === 'login' ? 'Login with your mobile number.' : 'Create your account in 30 seconds.'}
-            </p>
-
-            {mode === 'register' && (
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input className="form-input" type="text" placeholder="Your name" value={form.name} onChange={e => update('name', e.target.value)} />
-              </div>
-            )}
+        {/* ── LOGIN FORM ── */}
+        {mode === 'login' && (
+          <form onSubmit={handleLogin}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Welcome back!</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 28 }}>Login with your phone and password.</p>
 
             <div className="form-group">
               <label className="form-label">Mobile Number</label>
@@ -135,6 +140,63 @@ export default function Login() {
               </div>
             </div>
 
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input className="form-input" type={showPass ? 'text' : 'password'} placeholder="Enter your password" value={form.password}
+                  onChange={e => update('password', e.target.value)}
+                  style={{ paddingLeft: 42, paddingRight: 42 }} />
+                <button type="button" onClick={() => setShowPass(s => !s)}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {error && <div style={{ background: '#FFEBEE', color: '#C62828', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>}
+
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: loading ? 0.7 : 1 }} disabled={loading}>
+              {loading ? 'Logging in…' : <><span>Login</span> <ArrowRight size={16} /></>}
+            </button>
+          </form>
+        )}
+
+        {/* ── SIGNUP FORM ── */}
+        {mode === 'register' && (
+          <form onSubmit={handleSendOtp}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Join ManaHarvest</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 28 }}>Create your account in 30 seconds.</p>
+
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input className="form-input" type="text" placeholder="Your name" value={form.name} onChange={e => update('name', e.target.value)} />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Mobile Number</label>
+              <div style={{ position: 'relative' }}>
+                <Phone size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input className="form-input" type="tel" placeholder="10-digit mobile number" value={form.phone}
+                  onChange={e => update('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  style={{ paddingLeft: 42 }} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input className="form-input" type={showPass ? 'text' : 'password'} placeholder="Min. 6 characters" value={form.password}
+                  onChange={e => update('password', e.target.value)}
+                  style={{ paddingLeft: 42, paddingRight: 42 }} />
+                <button type="button" onClick={() => setShowPass(s => !s)}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
             {error && <div style={{ background: '#FFEBEE', color: '#C62828', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>}
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: loading ? 0.7 : 1 }} disabled={loading}>
@@ -143,21 +205,16 @@ export default function Login() {
           </form>
         )}
 
-        {/* OTP Verification */}
+        {/* ── OTP VERIFICATION (signup only) ── */}
         {mode === 'otp' && (
           <form onSubmit={handleVerifyOtp}>
             <div style={{ width: 56, height: 56, background: 'var(--green-pale)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
               <Phone size={24} color="var(--green)" />
             </div>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Verify Your Number</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 8 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
               We sent a 6-digit OTP to <strong>+91 {form.phone}</strong>.
             </p>
-            {devOtp && (
-              <div style={{ background: '#E8F5E9', border: '1px solid #A5D6A7', borderRadius: 8, padding: '8px 12px', fontSize: 13, marginBottom: 20, color: '#2E7D32' }}>
-                🔧 Dev mode — Your OTP is: <strong style={{ fontFamily: 'monospace', fontSize: 16 }}>{devOtp}</strong>
-              </div>
-            )}
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 28 }}>
               {otp.map((d, i) => (
@@ -168,7 +225,7 @@ export default function Login() {
                     width: 46, height: 56, textAlign: 'center', fontSize: 22, fontWeight: 700,
                     border: `2px solid ${d ? 'var(--green)' : 'var(--border)'}`, borderRadius: 12,
                     background: d ? 'var(--green-pale)' : 'white', color: 'var(--text)',
-                    transition: 'all .2s', outline: 'none', fontFamily: 'var(--font-body)'
+                    transition: 'all .2s', outline: 'none'
                   }}
                 />
               ))}
@@ -177,11 +234,11 @@ export default function Login() {
             {error && <div style={{ background: '#FFEBEE', color: '#C62828', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>}
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: loading ? 0.7 : 1 }} disabled={loading}>
-              {loading ? 'Verifying…' : 'Verify & Continue'}
+              {loading ? 'Verifying…' : 'Verify & Create Account'}
             </button>
-            <button type="button" onClick={() => { setMode('login'); setOtp(['', '', '', '', '', '']); setError('') }}
+            <button type="button" onClick={() => { setMode('register'); setOtp(['', '', '', '', '', '']); setError('') }}
               style={{ display: 'block', margin: '16px auto 0', color: 'var(--text-muted)', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer' }}>
-              ← Change number
+              ← Go back
             </button>
           </form>
         )}
