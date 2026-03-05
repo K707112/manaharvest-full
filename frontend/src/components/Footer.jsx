@@ -18,7 +18,7 @@ export default function Footer() {
               </span>
             </div>
             <p style={{ fontSize: 14, lineHeight: 1.7, color: 'rgba(255,255,255,0.6)', maxWidth: 280, marginBottom: 20 }}>
-              Fresh vegetables from village fields to your home in under 6 hours. Supporting 12+ farmers across Telangana.
+              Fresh vegetables from village fields to your home in under 6 hours. Supporting 12+ farmers across india.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               {[
@@ -60,7 +60,7 @@ export default function Footer() {
                 <Phone size={14} /> +91 7075573757
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
-                <Mail size={14} /> hello@manaharvest.in
+                <Mail size={14} /> koteswararao1872005@gmail.com
               </div>
               <div style={{ marginTop: 8, padding: 12, background: 'rgba(255,255,255,0.07)', borderRadius: 10, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
                 🕐 Harvest Window: 5:30 AM – 9:00 AM<br />
@@ -73,7 +73,7 @@ export default function Footer() {
         <hr style={{ borderColor: 'rgba(255,255,255,0.1)', marginBottom: 24 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'rgba(255,255,255,0.4)', flexWrap: 'wrap', gap: 8 }}>
           <span>© 2026 ManaHarvest. All rights reserved.</span>
-          <span>Made with ❤️ for village farmers of andhar pradesh</span>
+          <span>Made with ❤️ for village farmers of india</span>
         </div>
       </div>
 
