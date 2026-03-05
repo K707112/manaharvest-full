@@ -26,8 +26,8 @@ async function request(path, options = {}) {
 
 // ── Auth ────────────────────────────────────────────────────
 export const authAPI = {
-  sendOtp:    (phone)               => request('/auth/otp/send',     { method: 'POST', body: JSON.stringify({ phone }) }),
-  verifyOtp:  (phone, otp, name)    => request('/auth/otp/verify',   { method: 'POST', body: JSON.stringify({ phone, otp, name }) }),
+  sendOtp:    (phone, isSignup = true) => request('/auth/otp/send', { method: 'POST', body: JSON.stringify({ phone, isLogin: !isSignup }) }),
+  verifyOtp:  (phone, otp, name, password) => request('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ phone, otp, name, password }) }),
   loginWithPassword: (phone, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ phone, password }) }),
   logout:     ()                    => request('/auth/logout',        { method: 'POST' }),
   refresh:    (refresh_token)       => request('/auth/token/refresh', { method: 'POST', body: JSON.stringify({ refresh_token }) }),

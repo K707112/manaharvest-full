@@ -12,9 +12,8 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 )
 
-// In-memory OTP store (swap with Redis in production)
 const otpStore = new Map()
-const OTP_TTL = 5 * 60 * 1000  // 5 minutes
+const OTP_TTL = 5 * 60 * 1000
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString()
@@ -37,16 +36,29 @@ function signTokens(userId) {
 // POST /auth/otp/send
 export async function sendOtp(req, res, next) {
   try {
-    const { phone } = req.body
-    const otp = generateOtp()
+    const { phone, isLogin } = req.body
 
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('phone', phone)
+      .single()
+
+    if (!isLogin && existingUser) {
+      throw new AppError('Phone already registered. Please login.', 400, 'ALREADY_REGISTERED')
+    }
+
+    if (isLogin && !existingUser) {
+      throw new AppError('No account found. Please sign up first.', 400, 'NOT_REGISTERED')
+    }
+
+    const otp = generateOtp()
     otpStore.set(phone, {
       otp,
       expiresAt: Date.now() + OTP_TTL,
       attempts:  0,
     })
 
-    // Send SMS via Twilio
     await twilioClient.messages.create({
       body: `Your ManaHarvest OTP is ${otp}. Valid for 5 minutes.`,
       from: process.env.TWILIO_PHONE_NUMBER,
@@ -54,17 +66,13 @@ export async function sendOtp(req, res, next) {
     })
 
     logger.info(`OTP sent to ${phone}`)
-
-    res.json({
-      success: true,
-      message: 'OTP sent successfully',
-    })
+    res.json({ success: true, message: 'OTP sent successfully' })
   } catch (err) {
     next(err)
   }
 }
 
-// POST /auth/otp/verify — signup with OTP + password
+// POST /auth/otp/verify
 export async function verifyOtp(req, res, next) {
   try {
     const { phone, otp, name, password, referral_code } = req.body
@@ -83,7 +91,6 @@ export async function verifyOtp(req, res, next) {
 
     otpStore.delete(phone)
 
-    // Check if user already exists
     let { data: user } = await supabaseAdmin
       .from('users')
       .select('*')
@@ -105,7 +112,6 @@ export async function verifyOtp(req, res, next) {
         referrerId = referrer?.id || null
       }
 
-      // Hash password before saving
       const hashedPassword = password ? await bcrypt.hash(password, 10) : null
 
       const { data: newUser, error: createErr } = await supabaseAdmin
@@ -156,7 +162,7 @@ export async function verifyOtp(req, res, next) {
   }
 }
 
-// POST /auth/login — login with phone + password
+// POST /auth/login
 export async function loginWithPassword(req, res, next) {
   try {
     const { phone, password } = req.body
@@ -170,8 +176,7 @@ export async function loginWithPassword(req, res, next) {
       .single()
 
     if (!user) throw new AppError('No account found with this phone number', 404)
-
-    if (!user.password_hash) throw new AppError('Please sign up first or use OTP login', 400)
+    if (!user.password_hash) throw new AppError('Please sign up first', 400)
 
     const isMatch = await bcrypt.compare(password, user.password_hash)
     if (!isMatch) throw new AppError('Wrong password', 401)

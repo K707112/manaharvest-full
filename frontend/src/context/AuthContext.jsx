@@ -22,14 +22,14 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const sendOtp = async (phone) => {
-    try {
-      const res = await authAPI.sendOtp(phone)
-      return { success: true, otp: res.otp }
-    } catch (err) {
-      return { success: false, message: err.message }
-    }
+ const sendOtp = async (phone, isSignup = true) => {
+  try {
+    const res = await authAPI.sendOtp(phone, isSignup)
+    return { success: true }
+  } catch (err) {
+    return { success: false, message: err.message }
   }
+}
 
   const verifyOtp = async (phone, otp, name, password) => {
     try {
