@@ -4,6 +4,12 @@ import { supabaseAdmin } from '../config/supabase.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { generateReferralCode } from '../utils/helpers.js'
 import { logger } from '../utils/logger.js'
+import twilio from 'twilio'
+
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+)
 
 // In-memory OTP store (swap with Redis in production)
 const otpStore = new Map()  // phone → { otp, expiresAt, attempts }
@@ -41,14 +47,18 @@ export async function sendOtp(req, res, next) {
 
     // TODO: Replace with real SMS gateway (Twilio / MSG91)
     // await smsService.send(phone, `Your ManaHarvest OTP is ${otp}`)
-    logger.info(`OTP for ${phone}: ${otp}`)  // Dev only — remove in prod
+    await twilioClient.messages.create({
+  body: `Your ManaHarvest OTP is ${otp}. Valid for 5 minutes.`,
+  from: process.env.TWILIO_PHONE_NUMBER,
+  to:   `+91${phone}`
+})
 
-    res.json({
-      success: true,
-      message: 'OTP sent successfully',
-      // Only include otp in dev for easy testing
-      ...(process.env.NODE_ENV === 'development' && { otp }),
-    })
+logger.info(`OTP sent to ${phone}`)
+
+res.json({
+  success: true,
+  message: 'OTP sent successfully',
+})
   } catch (err) {
     next(err)
   }

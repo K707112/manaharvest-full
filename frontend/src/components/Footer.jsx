@@ -57,7 +57,7 @@ export default function Footer() {
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, color: '#A5D6A7', marginBottom: 16 }}>Contact</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
-                <Phone size={14} /> +91 98491 XXXXX
+                <Phone size={14} /> +91 7075573757
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
                 <Mail size={14} /> hello@manaharvest.in
@@ -73,7 +73,7 @@ export default function Footer() {
         <hr style={{ borderColor: 'rgba(255,255,255,0.1)', marginBottom: 24 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'rgba(255,255,255,0.4)', flexWrap: 'wrap', gap: 8 }}>
           <span>© 2026 ManaHarvest. All rights reserved.</span>
-          <span>Made with ❤️ for village farmers of Telangana</span>
+          <span>Made with ❤️ for village farmers of andhar pradesh</span>
         </div>
       </div>
 
