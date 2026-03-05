@@ -102,6 +102,15 @@ export default function Navbar() {
                     <span className="hide-sm">{user.name.split(' ')[0]}</span>
                   </button>
                 </Link>
+                {user.role === 'admin' && (
+                  <Link to="/admin" title="Admin Panel">
+                    <button style={{
+                      width: 40, height: 40, borderRadius: 10, background: 'white',
+                      border: '1.5px solid var(--border)', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: 18
+                    }}>🛡️</button>
+                  </Link>
+                )}
                 <button onClick={logout} style={{
                   width: 40, height: 40, borderRadius: 10, background: 'white',
                   border: '1.5px solid var(--border)', display: 'flex', alignItems: 'center',
@@ -111,11 +120,20 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link to="/login">
-                <button className="btn btn-primary btn-sm" style={{ borderRadius: 10 }}>
-                  Login
-                </button>
-              </Link>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Link to="/login">
+                  <button className="btn btn-primary btn-sm" style={{ borderRadius: 10 }}>
+                    Login
+                  </button>
+                </Link>
+                <Link to="/admin" title="Admin Panel">
+                  <button style={{
+                    width: 40, height: 40, borderRadius: 10, background: 'white',
+                    border: '1.5px solid var(--border)', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', fontSize: 18
+                  }}>🛡️</button>
+                </Link>
+              </div>
             )}
 
             {/* Hamburger */}
@@ -156,14 +174,24 @@ export default function Navbar() {
                 <Link to="/dashboard" style={{ padding: '14px 16px', borderRadius: 12, fontSize: 16, fontWeight: 500, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <User size={16} /> My Dashboard
                 </Link>
+                {user.role === 'admin' && (
+                  <Link to="/admin" style={{ padding: '14px 16px', borderRadius: 12, fontSize: 16, fontWeight: 500, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    🛡️ Admin Panel
+                  </Link>
+                )}
                 <button onClick={logout} style={{ padding: '14px 16px', borderRadius: 12, fontSize: 16, fontWeight: 500, color: '#C62828', background: '#FFEBEE', display: 'flex', alignItems: 'center', gap: 8, border: 'none', width: '100%', cursor: 'pointer' }}>
                   <LogOut size={16} /> Logout
                 </button>
               </>
             ) : (
-              <Link to="/login" style={{ padding: '14px 16px', borderRadius: 12, fontSize: 16, fontWeight: 600, color: 'white', background: 'var(--green)', textAlign: 'center' }}>
-                Login / Sign Up
-              </Link>
+              <>
+                <Link to="/login" style={{ padding: '14px 16px', borderRadius: 12, fontSize: 16, fontWeight: 600, color: 'white', background: 'var(--green)', textAlign: 'center' }}>
+                  Login / Sign Up
+                </Link>
+                <Link to="/admin" style={{ padding: '14px 16px', borderRadius: 12, fontSize: 16, fontWeight: 500, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  🛡️ Admin Panel
+                </Link>
+              </>
             )}
           </div>
         </div>
