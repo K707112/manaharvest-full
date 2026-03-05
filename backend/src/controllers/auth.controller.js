@@ -100,6 +100,7 @@ export async function verifyOtp(req, res, next) {
     let isNewUser = false
 
     if (!user) {
+      // New user — create account
       isNewUser = true
       let referrerId = null
 
@@ -137,9 +138,15 @@ export async function verifyOtp(req, res, next) {
       }
     }
 
+    // Update last login + save password if not set yet
+    const updates = { last_login_at: new Date().toISOString() }
+    if (password && !user.password_hash) {
+      updates.password_hash = await bcrypt.hash(password, 10)
+    }
+
     await supabaseAdmin
       .from('users')
-      .update({ last_login_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', user.id)
 
     const { access, refresh } = signTokens(user.id)
