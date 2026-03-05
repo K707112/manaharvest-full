@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -26,7 +26,7 @@ function Layout({ children, hideFooter }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -41,6 +41,6 @@ export default function App() {
           <Route path="/batch/:batchId" element={<Layout><BatchInfo /></Layout>} />
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
