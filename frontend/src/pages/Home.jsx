@@ -191,7 +191,6 @@ export default function Home() {
         }
         @media (max-width: 768px) {
           .steps-grid { grid-template-columns: 1fr 1fr !important; }
-          .step-arrow { display: none !important; }
           .farmers-grid { grid-template-columns: 1fr 1fr !important; }
         }
         @media (max-width: 480px) {
