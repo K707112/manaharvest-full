@@ -1,7 +1,12 @@
-// src/pages/Admin.jsx — Full Admin Panel
+// src/pages/Admin.jsx — Full Admin Panel with Image Upload
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_URL = 'https://gydtxzxjmejsdoculytc.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5ZHR4enhqbWVqc2RvY3VseXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MjIxODAsImV4cCI6MjA4ODA5ODE4MH0.WtobeYIslYzJRJ-mN_y_jE9JJhG2mc-xpwrFxeHdE24'
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON)
 
 const BASE = 'https://manaharvest-full.vercel.app/api/v1'
 async function api(path, options = {}) {
@@ -56,17 +61,6 @@ function Input({ label, ...props }) {
   )
 }
 
-function Select({ label, options, ...props }) {
-  return (
-    <div style={{ marginBottom: 14 }}>
-      {label && <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>{label}</label>}
-      <select style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #ddd', borderRadius: 8, fontSize: 14, background: 'white', boxSizing: 'border-box' }} {...props}>
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </div>
-  )
-}
-
 function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) {
   const styles = {
     primary: { background: '#2E7D32', color: 'white', border: 'none' },
@@ -80,6 +74,65 @@ function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) 
     <button onClick={onClick} disabled={disabled} style={{ ...styles[variant], ...sizes[size], borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: disabled ? 0.6 : 1, whiteSpace: 'nowrap' }}>
       {children}
     </button>
+  )
+}
+
+// ── IMAGE UPLOAD COMPONENT ───────────────────────────────────
+function ImageUpload({ value, onChange }) {
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState(value || '')
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const fileName = `crop-${Date.now()}.${ext}`
+      const { data, error } = await supabase.storage
+        .from('crop-images')
+        .upload(fileName, file, { upsert: true })
+      if (error) throw error
+      const { data: urlData } = supabase.storage
+        .from('crop-images')
+        .getPublicUrl(fileName)
+      setPreview(urlData.publicUrl)
+      onChange(urlData.publicUrl)
+    } catch (err) {
+      alert('Upload failed: ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Crop Photo</label>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        {preview ? (
+          <img src={preview} alt="crop" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1.5px solid #ddd' }} />
+        ) : (
+          <div style={{ width: 80, height: 80, background: '#f5f5f5', borderRadius: 10, border: '1.5px dashed #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🌿</div>
+        )}
+        <div>
+          <label style={{
+            background: '#2E7D32', color: 'white', padding: '8px 16px', borderRadius: 8,
+            fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
+            opacity: uploading ? 0.6 : 1, display: 'inline-block'
+          }}>
+            {uploading ? 'Uploading…' : '📷 Upload Photo'}
+            <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} disabled={uploading} />
+          </label>
+          {preview && (
+            <button onClick={() => { setPreview(''); onChange('') }}
+              style={{ marginLeft: 8, background: 'none', border: 'none', color: '#B71C1C', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+              Remove
+            </button>
+          )}
+          <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>JPG, PNG up to 5MB</div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -136,7 +189,6 @@ function OrdersTab() {
 
   return (
     <div>
-      {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
         {FILTERS.map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{
@@ -146,7 +198,6 @@ function OrdersTab() {
           }}>{f === 'all' ? 'All Orders' : f}</button>
         ))}
       </div>
-
       {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Loading orders…</div> : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -201,7 +252,7 @@ function OrdersTab() {
 function FarmersTab() {
   const [farmers, setFarmers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState(null) // null | 'add' | farmer object
+  const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
 
@@ -220,9 +271,8 @@ function FarmersTab() {
     } catch (e) { alert(e.message) } finally { setSaving(false) }
   }
 
-  const verify  = async (id) => { await api(`/admin/farmers/${id}/verify`, { method: 'PATCH' }); load() }
+  const verify     = async (id) => { await api(`/admin/farmers/${id}/verify`, { method: 'PATCH' }); load() }
   const deactivate = async (id) => { if (confirm('Deactivate this farmer?')) { await api(`/admin/farmers/${id}`, { method: 'DELETE' }); load() } }
-
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   return (
@@ -231,7 +281,6 @@ function FarmersTab() {
         <div style={{ color: '#888', fontSize: 13 }}>{farmers.length} farmers total</div>
         <Btn onClick={openAdd}>+ Add Farmer</Btn>
       </div>
-
       {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Loading…</div> : (
         <div style={{ display: 'grid', gap: 12 }}>
           {farmers.map(f => (
@@ -255,7 +304,6 @@ function FarmersTab() {
           {farmers.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>No farmers yet.</div>}
         </div>
       )}
-
       {modal && (
         <Modal title={modal === 'add' ? 'Add New Farmer' : `Edit — ${form.name}`} onClose={() => setModal(null)}>
           <Input label="Full Name *" value={form.name || ''} onChange={e => set('name', e.target.value)} placeholder="Farmer name" />
@@ -338,7 +386,6 @@ function CropsTab() {
         <div style={{ color: '#888', fontSize: 13 }}>{crops.length} crops total</div>
         <Btn onClick={openAdd}>+ Add Crop</Btn>
       </div>
-
       {loading ? <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Loading…</div> : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -354,7 +401,10 @@ function CropsTab() {
                 <tr key={c.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '12px 14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 20 }}>{c.emoji || '🌿'}</span>
+                      {c.image_url
+                        ? <img src={c.image_url} alt={c.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }} />
+                        : <span style={{ fontSize: 28 }}>{c.emoji || '🌿'}</span>
+                      }
                       <div>
                         <div style={{ fontWeight: 600 }}>{c.name}</div>
                         <div style={{ color: '#aaa', fontSize: 11, fontFamily: 'monospace' }}>{c.batch_id}</div>
@@ -396,9 +446,12 @@ function CropsTab() {
               {farmers.filter(f => f.is_active).map(f => <option key={f.id} value={f.id}>{f.name} — {f.village}</option>)}
             </select>
           </div>
+
+          {/* Image Upload — replaces emoji */}
+          <ImageUpload value={form.image_url || ''} onChange={v => set('image_url', v)} />
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Input label="Crop Name *" value={form.name || ''} onChange={e => set('name', e.target.value)} placeholder="e.g. Tomato" />
-            <Input label="Emoji" value={form.emoji || ''} onChange={e => set('emoji', e.target.value)} placeholder="🍅" />
           </div>
           <div style={{ marginBottom: 14 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Category *</label>
@@ -524,7 +577,6 @@ export default function Admin() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f8fa', paddingTop: 80 }}>
-      {/* Header */}
       <div style={{ background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)', padding: '28px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <h1 style={{ color: 'white', fontFamily: 'Georgia, serif', fontSize: 26, fontWeight: 700, margin: 0 }}>
@@ -533,12 +585,8 @@ export default function Admin() {
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 4 }}>Welcome back, {user.name}</p>
         </div>
       </div>
-
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 24px' }}>
-        {/* Stats */}
         <StatsSection />
-
-        {/* Tab nav */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'white', padding: 6, borderRadius: 12, width: 'fit-content', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -549,8 +597,6 @@ export default function Admin() {
             }}>{t.label}</button>
           ))}
         </div>
-
-        {/* Tab content */}
         <div style={{ background: 'white', borderRadius: 14, padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', minHeight: 400 }}>
           {tab === 'orders'  && <OrdersTab />}
           {tab === 'farmers' && <FarmersTab />}
