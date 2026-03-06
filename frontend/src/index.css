@@ -108,3 +108,64 @@ img { display: block; max-width: 100%; }
   .container { padding: 0 16px; }
   .section { padding: 48px 0; }
 }
+@media (max-width: 768px) {
+  .steps-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .farmers-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .step-arrow {
+    display: none !important;
+  }
+
+  .hero-text {
+    grid-column: 1 / -1 !important;
+    text-align: center !important;
+  }
+
+  .hero-cards {
+    display: none !important;
+  }
+
+  .nav-links {
+    display: none !important;
+  }
+
+  .hamburger {
+    display: flex !important;
+  }
+
+  .hide-sm {
+    display: none !important;
+  }
+
+  .btn {
+    padding: 10px 18px !important;
+    font-size: 14px !important;
+  }
+
+  h1 {
+    font-size: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.6rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .steps-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .farmers-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
