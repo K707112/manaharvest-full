@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
 
-const BASE = '/api/v1'
+const BASE = 'https://manaharvest-full.vercel.app/api/v1'
 async function api(path, options = {}) {
   const token = localStorage.getItem('token')
   const res = await fetch(`${BASE}${path}`, {
