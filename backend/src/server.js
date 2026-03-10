@@ -14,6 +14,7 @@ import { registerRoutes } from './routes/index.js'
 import { startCronJobs } from './jobs/index.js'
 
 const app  = express()
+app.set('trust proxy', 1)
 const PORT = process.env.PORT || 4000
 const VER  = process.env.API_VERSION || 'v1'
 
