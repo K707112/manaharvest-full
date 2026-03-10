@@ -1,9 +1,21 @@
-// src/pages/Harvest.jsx — connected to real backend
+// src/pages/Harvest.jsx — with subscription plan support
 import { useState, useEffect } from 'react'
 import { Clock, ShoppingCart, Search } from 'lucide-react'
 import { cropsAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+
+const PLAN_INFO = {
+  small:  { name: 'Small Family',  price: 399,  maxKg: 5,  vegetables: 7,  color: '#1565C0', bg: '#E3F2FD' },
+  medium: { name: 'Medium Family', price: 699,  maxKg: 9,  vegetables: 9,  color: '#2E7D32', bg: '#E8F5E9' },
+  large:  { name: 'Large Family',  price: 999,  maxKg: 15, vegetables: 10, color: '#6A1B9A', bg: '#F3E5F5' },
+}
+
+const QTY_OPTIONS = [
+  { label: '200g', value: 0.2 },
+  { label: '500g', value: 0.5 },
+  { label: '1 kg', value: 1.0 },
+]
 
 function Countdown() {
   const now = new Date()
@@ -16,14 +28,19 @@ function Countdown() {
 }
 
 export default function Harvest() {
-  const [crops, setCrops]     = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState('')
-  const [search, setSearch]   = useState('')
-  const [cat, setCat]         = useState('all')
-  const [time, setTime]       = useState(Countdown())
-  const [added, setAdded]     = useState({})
-  const { addToCart, cart }   = useAuth()
+  const [crops, setCrops]       = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
+  const [search, setSearch]     = useState('')
+  const [cat, setCat]           = useState('all')
+  const [time, setTime]         = useState(Countdown())
+  const [added, setAdded]       = useState({})
+  const [qty, setQty]           = useState({})   // cropId → kg value
+  const [planCart, setPlanCart] = useState([])   // items selected for plan
+  const { addToCart }           = useAuth()
+  const [searchParams]          = useSearchParams()
+  const planId                  = searchParams.get('plan')
+  const plan                    = planId ? PLAN_INFO[planId] : null
 
   useEffect(() => {
     cropsAPI.getAll({ limit: 50 })
@@ -46,16 +63,31 @@ export default function Harvest() {
     return matchCat && matchSearch
   })
 
+  // Total kg selected in plan
+  const totalKg = planCart.reduce((sum, i) => sum + i.qty, 0)
+
   const handleAdd = (crop) => {
-    // Map backend crop fields to cart format
+    const selectedQty = qty[crop.id] || 1
     addToCart({
-      id:       crop.id,
-      name:     crop.name,
-      emoji:    crop.emoji || '🌿',
-      price:    crop.dynamic_price || crop.price_per_kg,
-      unit:     'kg',
-      batchId:  crop.batch_id,
+      id:      crop.id,
+      name:    crop.name,
+      emoji:   crop.emoji || '🌿',
+      image:   crop.image_url || null,
+      price:   crop.dynamic_price || crop.price_per_kg,
+      unit:    'kg',
+      qty:     selectedQty,
+      batchId: crop.batch_id,
+      planId:  planId || null,
     })
+
+    if (plan) {
+      setPlanCart(prev => {
+        const exists = prev.find(i => i.id === crop.id)
+        if (exists) return prev.map(i => i.id === crop.id ? { ...i, qty: i.qty + selectedQty } : i)
+        return [...prev, { id: crop.id, name: crop.name, qty: selectedQty }]
+      })
+    }
+
     setAdded(a => ({ ...a, [crop.id]: true }))
     setTimeout(() => setAdded(a => ({ ...a, [crop.id]: false })), 1500)
     cropsAPI.incrementView(crop.id).catch(() => {})
@@ -63,7 +95,42 @@ export default function Harvest() {
 
   return (
     <div className="page-enter" style={{ paddingTop: 80 }}>
-      {/* Header */}
+      {/* ── PLAN BANNER ── */}
+      {plan && (
+        <div style={{ background: plan.bg, borderBottom: `3px solid ${plan.color}`, padding: '14px 0' }}>
+          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ background: plan.color, color: 'white', padding: '4px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700 }}>
+                {plan.name} Plan — ₹{plan.price}/week
+              </span>
+              <span style={{ fontSize: 13, color: plan.color, fontWeight: 600 }}>
+                Pick up to {plan.vegetables} vegetables · Max {plan.maxKg}kg total
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* Weight progress */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 120, height: 8, background: '#ddd', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 99,
+                    background: totalKg >= plan.maxKg ? '#B71C1C' : plan.color,
+                    width: `${Math.min(100, (totalKg / plan.maxKg) * 100)}%`,
+                    transition: 'width .3s'
+                  }} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: plan.color }}>
+                  {totalKg.toFixed(1)}/{plan.maxKg}kg
+                </span>
+              </div>
+              <span style={{ fontSize: 13, color: plan.color, fontWeight: 600 }}>
+                {planCart.length}/{plan.vegetables} selected
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── HEADER ── */}
       <div style={{ background: 'linear-gradient(135deg, var(--green) 0%, #1B5E20 100%)', padding: '48px 0 40px', color: 'white' }}>
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
@@ -71,11 +138,13 @@ export default function Harvest() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <span style={{ width: 10, height: 10, background: '#A5D6A7', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s infinite' }} />
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
-                  Live Today – {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
+                  Live Today — {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
                 </span>
               </div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem,4vw,2.8rem)', fontWeight: 700, marginBottom: 8 }}>Today's Harvest</h1>
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15 }}>All harvested this morning. Orders close at 2:00 PM.</p>
+              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15 }}>
+                {plan ? `Building your ${plan.name} box — pick your vegetables below` : 'All harvested this morning. Orders close at 2:00 PM.'}
+              </p>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.25)', borderRadius: 16, padding: '16px 24px', textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginBottom: 4 }}>Orders close in</div>
@@ -86,7 +155,7 @@ export default function Harvest() {
       </div>
 
       <div className="container section">
-        {/* Search & Filter */}
+        {/* ── Search & Filter ── */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
             <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -116,69 +185,109 @@ export default function Harvest() {
         {/* Error */}
         {error && (
           <div style={{ background: '#FFEBEE', color: '#C62828', padding: 20, borderRadius: 12, textAlign: 'center', marginBottom: 24 }}>
-            ⚠️ {error} — Make sure your backend is running at port 4000.
+            ⚠️ {error}
           </div>
         )}
 
-        {/* Grid */}
+        {/* ── Grid ── */}
         {!loading && !error && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
-            {filtered.map(p => (
-              <div key={p.id} className="card" style={{ padding: 0, overflow: 'hidden', transition: 'transform .2s, box-shadow .2s' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
-                <div style={{ height: 6, background: 'var(--green)' }} />
-                <div style={{ padding: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                    <div style={{ fontSize: 48 }}>{p.emoji || '🌿'}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
-                      {p.freshness_score && (
-                        <span className="badge badge-green" style={{ fontSize: 11 }}>
-                          <Clock size={10} /> {Math.round(p.freshness_score)}% fresh
-                        </span>
-                      )}
-                      {p.stock_left_kg < 25 && (
-                        <span className="badge badge-orange" style={{ fontSize: 11 }}>Only {p.stock_left_kg}kg left</span>
-                      )}
+            {filtered.map(p => {
+              const inPlan = planCart.find(i => i.id === p.id)
+              return (
+                <div key={p.id} className="card" style={{
+                  padding: 0, overflow: 'hidden', transition: 'transform .2s, box-shadow .2s',
+                  border: inPlan ? '2px solid var(--green)' : '1px solid var(--border)'
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)' }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
+                  <div style={{ height: 6, background: inPlan ? 'var(--green)' : 'var(--green)' }} />
+
+                  {/* Crop Image or Emoji */}
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+                  ) : null}
+
+                  <div style={{ padding: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                      {!p.image_url && <div style={{ fontSize: 48 }}>{p.emoji || '🌿'}</div>}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', marginLeft: 'auto' }}>
+                        {p.freshness_score && (
+                          <span className="badge badge-green" style={{ fontSize: 11 }}>
+                            <Clock size={10} /> {Math.round(p.freshness_score)}% fresh
+                          </span>
+                        )}
+                        {p.stock_left_kg < 25 && (
+                          <span className="badge badge-orange" style={{ fontSize: 11 }}>Only {p.stock_left_kg}kg left</span>
+                        )}
+                        {inPlan && (
+                          <span className="badge badge-green" style={{ fontSize: 11 }}>✓ In your box ({inPlan.qty}kg)</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{p.name}</h3>
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
-                    {p.farmers?.name} · {p.farmers?.village}
-                  </p>
-                  {p.description && (
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>{p.description}</p>
-                  )}
+                    <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{p.name}</h3>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
+                      {p.farmers?.name} · {p.farmers?.village}
+                    </p>
+                    {p.description && (
+                      <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>{p.description}</p>
+                    )}
 
-                  {/* Batch ID */}
-                  <Link to={`/batch/${p.batch_id}`} style={{ display: 'block', marginBottom: 14 }}>
-                    <div style={{ background: 'var(--cream)', borderRadius: 8, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Batch ID</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', fontFamily: 'monospace' }}>{p.batch_id}</span>
+                    {/* Batch ID */}
+                    <Link to={`/batch/${p.batch_id}`} style={{ display: 'block', marginBottom: 14 }}>
+                      <div style={{ background: 'var(--cream)', borderRadius: 8, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Batch ID</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', fontFamily: 'monospace' }}>{p.batch_id}</span>
+                      </div>
+                    </Link>
+
+                    {/* Tags */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 16 }}>
+                      {p.is_organic && <span className="badge badge-green" style={{ fontSize: 10 }}>Organic</span>}
+                      {p.waste_risk === 'low' && <span className="badge badge-green" style={{ fontSize: 10 }}>Fresh Stock</span>}
                     </div>
-                  </Link>
 
-                  {/* Tags */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 16 }}>
-                    {p.is_organic && <span className="badge badge-green" style={{ fontSize: 10 }}>Organic</span>}
-                    {p.waste_risk === 'low' && <span className="badge badge-green" style={{ fontSize: 10 }}>Fresh Stock</span>}
-                  </div>
+                    {/* Quantity selector — only show when plan is active */}
+                    {plan && (
+                      <div style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>SELECT QUANTITY</div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          {QTY_OPTIONS.map(q => (
+                            <button key={q.value} onClick={() => setQty(prev => ({ ...prev, [p.id]: q.value }))}
+                              style={{
+                                flex: 1, padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                                border: (qty[p.id] || 1) === q.value ? '2px solid var(--green)' : '1.5px solid var(--border)',
+                                background: (qty[p.id] || 1) === q.value ? 'var(--green-pale)' : 'white',
+                                color: (qty[p.id] || 1) === q.value ? 'var(--green)' : 'var(--text-muted)',
+                                cursor: 'pointer'
+                              }}>
+                              {q.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Price & Cart */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--green)' }}>
-                      ₹{p.dynamic_price || p.price_per_kg}
-                      <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-muted)' }}>/kg</span>
-                    </span>
-                    <button onClick={() => handleAdd(p)} className="btn btn-primary btn-sm"
-                      style={{ background: added[p.id] ? '#388E3C' : 'var(--green)' }}>
-                      {added[p.id] ? '✓ Added' : <><ShoppingCart size={14} /> Add</>}
-                    </button>
+                    {/* Price & Cart */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--green)' }}>
+                        ₹{p.dynamic_price || p.price_per_kg}
+                        <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-muted)' }}>/kg</span>
+                      </span>
+                      <button onClick={() => handleAdd(p)} className="btn btn-primary btn-sm"
+                        disabled={plan && totalKg >= plan.maxKg && !inPlan}
+                        style={{
+                          background: added[p.id] ? '#388E3C' : 'var(--green)',
+                          opacity: (plan && totalKg >= plan.maxKg && !inPlan) ? 0.4 : 1
+                        }}>
+                        {added[p.id] ? '✓ Added' : <><ShoppingCart size={14} /> {plan ? 'Add to Box' : 'Add'}</>}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
@@ -188,7 +297,38 @@ export default function Harvest() {
             <p>No crops match your search.</p>
           </div>
         )}
+
+        {/* ── Plan summary bottom bar ── */}
+        {plan && planCart.length > 0 && (
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+            background: 'white', borderTop: '2px solid var(--border)',
+            padding: '16px 24px', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)'
+          }}>
+            <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  {plan.name} Box — {planCart.length} items · {totalKg.toFixed(1)}kg
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                  {planCart.map(i => `${i.name} (${i.qty}kg)`).join(', ')}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--green)' }}>
+                  ₹{plan.price}/week
+                </span>
+                <Link to="/cart">
+                  <button className="btn btn-primary">
+                    <ShoppingCart size={16} /> View Cart →
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
     </div>
   )
