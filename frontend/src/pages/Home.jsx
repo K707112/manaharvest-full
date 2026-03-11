@@ -1,201 +1,253 @@
-import { Link } from 'react-router-dom'
-import { ArrowRight, Clock, Users, Package, Leaf, Star, ChevronRight } from 'lucide-react'
-import { products } from '../data/products'
-import { farmers } from '../data/farmers'
+// src/pages/Home.jsx
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Search, ChevronRight, Star, Clock, Truck } from 'lucide-react'
+import { cropsAPI } from '../services/api'
+import { useAuth } from '../context/AuthContext'
+
+const CATEGORIES = [
+  { emoji: '🍅', label: 'Tomatoes',  q: 'tomato' },
+  { emoji: '🥬', label: 'Leafy',     q: 'spinach' },
+  { emoji: '🥕', label: 'Roots',     q: 'carrot' },
+  { emoji: '🌽', label: 'Grains',    q: 'corn' },
+  { emoji: '🥦', label: 'Gourds',    q: 'gourd' },
+  { emoji: '🧅', label: 'Onion',     q: 'onion' },
+  { emoji: '🌶️', label: 'Chillies', q: 'chilli' },
+  { emoji: '🫛', label: 'Beans',     q: 'beans' },
+]
+
+const PLANS = [
+  { id: 'small',  price: 399, label: 'Small Box',  kg: '5kg',  color: '#1565C0', bg: '#E3F2FD', icon: '🥬', tag: 'Starter' },
+  { id: 'medium', price: 699, label: 'Family Box', kg: '9kg',  color: '#2E7D32', bg: '#E8F5E9', icon: '🧺', tag: 'Popular' },
+  { id: 'large',  price: 999, label: 'Big Box',    kg: '15kg', color: '#6A1B9A', bg: '#F3E5F5', icon: '🏡', tag: 'Best Value' },
+]
 
 export default function Home() {
-  const featured = products.slice(0, 3)
+  const [query, setQuery]     = useState('')
+  const [crops, setCrops]     = useState([])
+  const [loading, setLoading] = useState(true)
+  const navigate              = useNavigate()
+  const { user }              = useAuth()
+
+  useEffect(() => {
+    cropsAPI.getAll({ limit: 8 })
+      .then(r => setCrops(r.data || []))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (query.trim()) navigate(`/harvest?q=${encodeURIComponent(query.trim())}`)
+  }
 
   return (
-    <div className="page-enter">
-      {/* Hero */}
-      <section style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center',
-        background: 'linear-gradient(135deg, #F1F8E9 0%, #E8F5E9 50%, #DCEDC8 100%)',
-        position: 'relative', overflow: 'hidden', paddingTop: 80
+    <div style={{ background: '#fafafa', paddingTop: 60, paddingBottom: 0 }}>
+
+      {/* ── Hero ── */}
+      <div style={{
+        background: 'linear-gradient(160deg, #1B5E20 0%, #2E7D32 60%, #388E3C 100%)',
+        padding: '32px 16px 28px', position: 'relative', overflow: 'hidden',
       }}>
-        {/* Background shapes */}
-        <div style={{ position: 'absolute', top: -80, right: -80, width: 500, height: 500, background: 'rgba(46,125,50,0.07)', borderRadius: '50%', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -100, left: -60, width: 400, height: 400, background: 'rgba(109,76,65,0.05)', borderRadius: '50%', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: '30%', right: '10%', width: 200, height: 200, background: 'rgba(46,125,50,0.05)', borderRadius: '50%', pointerEvents: 'none' }} />
+        {/* Decorative blobs */}
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+        <div style={{ position: 'absolute', bottom: -20, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
 
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center', padding: '80px 24px' }} >
-          <div className="hero-text">
-            <div className="badge badge-green" style={{ marginBottom: 20, fontSize: 13 }}>
-              <span style={{ width: 8, height: 8, background: '#4CAF50', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-              Live Harvest Today — 8 Crops Available
-            </div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', fontWeight: 700, lineHeight: 1.15, color: 'var(--text)', marginBottom: 20 }}>
-              Fresh From Our<br />
-              <span style={{ color: 'var(--green)' }}>Village Fields</span><br />
-              To Your Home
-            </h1>
-            <p style={{ fontSize: 17, color: 'var(--text-muted)', lineHeight: 1.7, maxWidth: 460, marginBottom: 32 }}>
-              Vegetables harvested before 9 AM, at your door by noon. No chemicals. No middlemen. Just honest, fresh produce straight from Telangana's farms.
-            </p>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <Link to="/harvest" className="btn btn-primary">
-                View Today's Harvest <ArrowRight size={16} />
-              </Link>
-              <Link to="/subscribe" className="btn btn-outline">
-                Weekly Box Plans
-              </Link>
-            </div>
+        <div style={{ maxWidth: 700, margin: '0 auto', position: 'relative' }}>
+          {/* Greeting */}
+          <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, marginBottom: 4 }}>
+            {user ? `Hello, ${user.name.split(' ')[0]} 👋` : '🌿 Farm to your doorstep'}
+          </div>
+          <h1 style={{ color: 'white', fontFamily: 'Georgia, serif', fontSize: 'clamp(1.6rem, 5vw, 2.4rem)', fontWeight: 700, margin: '0 0 20px', lineHeight: 1.2 }}>
+            Fresh from <span style={{ color: '#A5D6A7' }}>village fields</span><br />to your home 🥬
+          </h1>
 
-            {/* Stats */}
-            <div style={{ display: 'flex', gap: 32, marginTop: 40, flexWrap: 'wrap' }}>
-              {[
-                { icon: <Users size={16} />, value: '12+', label: 'Village Farmers' },
-                { icon: <Clock size={16} />, value: '<6h', label: 'Field to Door' },
-                { icon: <Package size={16} />, value: '500+', label: 'Happy Families' },
-              ].map(s => (
-                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, background: 'white', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--green)', boxShadow: 'var(--shadow)' }}>
-                    {s.icon}
+          {/* Search */}
+          <form onSubmit={handleSearch} style={{ position: 'relative', maxWidth: 500 }}>
+            <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search for tomatoes, spinach, carrots…"
+              style={{
+                width: '100%', height: 48, paddingLeft: 46, paddingRight: 110,
+                borderRadius: 12, border: 'none', fontSize: 14,
+                background: 'white', boxSizing: 'border-box',
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            />
+            <button type="submit" style={{
+              position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+              height: 36, padding: '0 18px', borderRadius: 8, border: 'none',
+              background: '#2E7D32', color: 'white', fontWeight: 700, fontSize: 13,
+              cursor: 'pointer',
+            }}>Search</button>
+          </form>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', gap: 20, marginTop: 20, flexWrap: 'wrap' }}>
+            {[
+              { icon: <Truck size={13} />, text: 'Free delivery' },
+              { icon: <Clock size={13} />, text: 'Harvested today' },
+              { icon: <Star size={13} />, text: '4.9 rating' },
+            ].map(s => (
+              <div key={s.text} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>
+                {s.icon} {s.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Categories ── */}
+      <div style={{ background: 'white', padding: '20px 16px 16px', borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <h2 style={{ fontWeight: 700, fontSize: 16, margin: 0, color: '#222' }}>What are you looking for?</h2>
+            <button onClick={() => navigate('/harvest')} style={{ background: 'none', border: 'none', color: '#2E7D32', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+              View all <ChevronRight size={14} />
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }} className="cat-grid">
+            {CATEGORIES.map(c => (
+              <button key={c.label} onClick={() => navigate(`/harvest?q=${c.q}`)}
+                style={{
+                  background: '#f9fafb', border: '1.5px solid #f0f0f0', borderRadius: 12,
+                  padding: '14px 8px', cursor: 'pointer', textAlign: 'center',
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#2E7D32'; e.currentTarget.style.background = '#F1F8E9' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#f0f0f0'; e.currentTarget.style.background = '#f9fafb' }}
+              >
+                <div style={{ fontSize: 26, marginBottom: 4 }}>{c.emoji}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#444' }}>{c.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Weekly Box Plans ── */}
+      <div style={{ padding: '24px 16px', background: '#fafafa' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <h2 style={{ fontWeight: 700, fontSize: 16, margin: '0 0 2px', color: '#222' }}>Weekly Veggie Boxes</h2>
+              <p style={{ fontSize: 12, color: '#888', margin: 0 }}>Delivered every Monday</p>
+            </div>
+            <button onClick={() => navigate('/subscribe')} style={{ background: 'none', border: 'none', color: '#2E7D32', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+              All plans <ChevronRight size={14} />
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }} className="plans-row">
+            {PLANS.map(p => (
+              <div key={p.id} onClick={() => navigate(`/plan-harvest?plan=${p.id}`)}
+                style={{
+                  background: 'white', borderRadius: 14, overflow: 'hidden',
+                  border: '1.5px solid #eee', cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'all .2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)' }}
+              >
+                <div style={{ background: p.bg, padding: '16px 16px 12px', textAlign: 'center' }}>
+                  <div style={{ background: p.color, color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 8px', borderRadius: 99, display: 'inline-block', marginBottom: 8, letterSpacing: 0.5 }}>{p.tag}</div>
+                  <div style={{ fontSize: 32, marginBottom: 4 }}>{p.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: p.color }}>{p.label}</div>
+                </div>
+                <div style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontFamily: 'Georgia, serif', fontWeight: 800, fontSize: 20, color: '#222' }}>₹{p.price}</span>
+                    <span style={{ fontSize: 11, color: '#888' }}>/week</span>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display)' }}>{s.value}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 10 }}>Up to {p.kg}</div>
+                  <button style={{
+                    width: '100%', padding: '8px', borderRadius: 8, border: 'none',
+                    background: p.color, color: 'white', fontWeight: 700, fontSize: 12,
+                    cursor: 'pointer',
+                  }}>Select →</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Today's Harvest ── */}
+      <div style={{ padding: '4px 16px 24px', background: '#fafafa' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <h2 style={{ fontWeight: 700, fontSize: 16, margin: '0 0 2px', color: '#222' }}>Today's Harvest 🌾</h2>
+              <p style={{ fontSize: 12, color: '#888', margin: 0 }}>Picked this morning</p>
+            </div>
+            <button onClick={() => navigate('/harvest')} style={{ background: 'none', border: 'none', color: '#2E7D32', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+              See all <ChevronRight size={14} />
+            </button>
+          </div>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#ccc', fontSize: 32 }}>🌿</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+              {crops.map(crop => (
+                <div key={crop.id} onClick={() => navigate('/harvest')}
+                  style={{
+                    background: 'white', borderRadius: 14, overflow: 'hidden',
+                    border: '1px solid #eee', cursor: 'pointer',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.05)', transition: 'all .2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  {crop.image_url
+                    ? <img src={crop.image_url} alt={crop.name} style={{ width: '100%', height: 100, objectFit: 'cover' }} />
+                    : <div style={{ height: 80, background: '#f1f8e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>{crop.emoji || '🌿'}</div>
+                  }
+                  <div style={{ padding: '10px 12px' }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#222', marginBottom: 2 }}>{crop.name}</div>
+                    <div style={{ fontSize: 11, color: '#999', marginBottom: 6 }}>{crop.farmers?.name || 'Local Farm'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, fontSize: 14, color: '#2E7D32' }}>₹{crop.dynamic_price || crop.price_per_kg}<span style={{ fontWeight: 400, fontSize: 10, color: '#aaa' }}>/kg</span></span>
+                      {crop.is_organic && <span style={{ background: '#E8F5E9', color: '#2E7D32', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99 }}>Organic</span>}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Hero Cards */}
-          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }} className="hero-cards">
-            {featured.map((p, i) => (
-              <div key={p.id} className="card" style={{
-                position: i === 0 ? 'relative' : 'absolute',
-                top: i === 1 ? 60 : i === 2 ? 20 : 0,
-                left: i === 1 ? 30 : i === 2 ? -20 : 0,
-                width: 220,
-                padding: 20,
-                transform: i === 0 ? 'rotate(-2deg)' : i === 1 ? 'rotate(3deg)' : 'rotate(-1deg)',
-                zIndex: 3 - i,
-                animation: `float${i} 4s ease-in-out infinite`,
-              }}>
-                <div style={{ fontSize: 48, textAlign: 'center', marginBottom: 12 }}>{p.emoji}</div>
-                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{p.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-                  {p.farmerName} · {p.village}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 700, color: 'var(--green)', fontSize: 16 }}>₹{p.price}/kg</span>
-                  <span className="badge badge-green" style={{ fontSize: 11 }}>
-                    <Clock size={10} /> {p.harvestTime}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
         </div>
-      </section>
+      </div>
 
-      {/* How it works */}
-      <section className="section" style={{ background: 'white' }}>
-        <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
-              Fresher Than Your Local Market
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 16, maxWidth: 500, margin: '0 auto' }}>
-              We pick, pack, and deliver on the same morning. Here's how it works:
-            </p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }} className="steps-grid">
-            {[
-              { emoji: '🌱', step: '5:30 AM', title: 'Farmers Harvest', desc: 'Farmers pick fresh vegetables at dawn based on your orders.' },
-              { emoji: '📦', step: '8:00 AM', title: 'Packed & Sorted', desc: 'Each batch is weighed, packed, and tagged with a Batch ID.' },
-              { emoji: '🚚', step: '9:30 AM', title: 'Sets Out for Delivery', desc: 'Our delivery team picks up packed boxes from the village.' },
-              { emoji: '🏠', step: 'By Noon', title: 'At Your Doorstep', desc: 'Fresh vegetables arrive at your home with the batch receipt.' },
-            ].map((s, i) => (
-              <div key={i} style={{ textAlign: 'center', padding: 24, borderRadius: 'var(--radius)', background: 'var(--cream)', position: 'relative' }}>
-                {i < 3 && <ChevronRight size={16} style={{ position: 'absolute', right: -12, top: '50%', transform: 'translateY(-50%)', color: 'var(--border)', zIndex: 1 }} className="step-arrow" />}
-                <div style={{ fontSize: 36, marginBottom: 12 }}>{s.emoji}</div>
-                <div className="badge badge-green" style={{ marginBottom: 10, fontSize: 11 }}>{s.step}</div>
-                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{s.title}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{s.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Farmers */}
-      <section className="section">
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40, flexWrap: 'wrap', gap: 16 }}>
+      {/* ── Banner ── */}
+      <div style={{ padding: '0 16px 32px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div onClick={() => navigate('/farmers')} style={{
+            background: 'linear-gradient(135deg, #795548 0%, #5D4037 100%)',
+            borderRadius: 16, padding: '24px 24px', cursor: 'pointer',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            overflow: 'hidden', position: 'relative',
+          }}>
+            <div style={{ position: 'absolute', right: -20, top: -20, fontSize: 80, opacity: 0.15 }}>👨‍🌾</div>
             <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
-                The Faces Behind Your Food
-              </h2>
-              <p style={{ color: 'var(--text-muted)' }}>Real farmers. Real stories. Real trust.</p>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 4 }}>Meet the people behind your food</div>
+              <div style={{ color: 'white', fontWeight: 800, fontSize: 18, fontFamily: 'Georgia, serif' }}>Our Village Farmers 👨‍🌾</div>
+              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 4 }}>12+ farmers from Telangana & AP</div>
             </div>
-            <Link to="/farmers" className="btn btn-outline btn-sm">
-              Meet All Farmers <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }} className="farmers-grid">
-            {farmers.map(f => (
-              <Link key={f.id} to={`/farmers#farmer-${f.id}`} style={{ textDecoration: 'none' }}>
-                <div className="card" style={{ padding: 20, textAlign: 'center', transition: 'transform .2s, box-shadow .2s', cursor: 'pointer' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
-                  <div style={{ width: 60, height: 60, background: 'var(--green-pale)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 12px' }}>{f.emoji}</div>
-                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{f.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>{f.village} · {f.yearsfarming}y</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 12 }}>
-                    <Star size={12} color="#F9A825" fill="#F9A825" />
-                    <span style={{ fontWeight: 600 }}>{f.rating}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>({f.totalOrders})</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px 16px', borderRadius: 99, color: 'white', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
+              Meet them →
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* CTA Banner */}
-      <section style={{ padding: '72px 0', background: 'var(--green)' }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <Leaf size={40} color="rgba(255,255,255,0.3)" style={{ margin: '0 auto 16px' }} />
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', fontWeight: 700, color: 'white', marginBottom: 16 }}>
-            Get Fresh Vegetables Every Week
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, marginBottom: 32, maxWidth: 480, margin: '0 auto 32px' }}>
-            Subscribe to a weekly box and never worry about vegetable shopping again. Prices start at ₹399/week.
-          </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/subscribe" style={{ background: 'white', color: 'var(--green)', padding: '12px 28px', borderRadius: 99, fontWeight: 600, fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              View Subscription Plans <ArrowRight size={16} />
-            </Link>
-            <Link to="/harvest" style={{ background: 'rgba(255,255,255,0.15)', color: 'white', padding: '12px 28px', borderRadius: 99, fontWeight: 600, fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8, border: '1.5px solid rgba(255,255,255,0.3)' }}>
-              Shop Today's Harvest
-            </Link>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <style>{`
-        @keyframes float0 { 0%,100% { transform: rotate(-2deg) translateY(0); } 50% { transform: rotate(-2deg) translateY(-10px); } }
-        @keyframes float1 { 0%,100% { transform: rotate(3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-14px); } }
-        @keyframes float2 { 0%,100% { transform: rotate(-1deg) translateY(0); } 50% { transform: rotate(-1deg) translateY(-8px); } }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-
-        @media (max-width: 900px) {
-          .hero-text { grid-column: 1 / -1 !important; }
-          .hero-cards { display: none !important; }
+        @media (max-width: 600px) {
+          .cat-grid { grid-template-columns: repeat(4, 1fr) !important; }
+          .plans-row { grid-template-columns: 1fr !important; }
         }
-        @media (max-width: 768px) {
-          .steps-grid { grid-template-columns: 1fr 1fr !important; }
-          .farmers-grid { grid-template-columns: 1fr 1fr !important; }
-        }
-        @media (max-width: 480px) {
-          .steps-grid { grid-template-columns: 1fr !important; }
-          .farmers-grid { grid-template-columns: 1fr 1fr !important; }
+        @media (min-width: 601px) and (max-width: 900px) {
+          .cat-grid { grid-template-columns: repeat(4, 1fr) !important; }
+          .plans-row { grid-template-columns: repeat(3, 1fr) !important; }
         }
       `}</style>
     </div>
