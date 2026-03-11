@@ -1,4 +1,4 @@
-// src/pages/Admin.jsx — Full Admin Panel with Image Upload
+// src/pages/Admin.jsx — Full Admin Panel with Image Upload + Auto Batch ID
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
@@ -17,6 +17,14 @@ async function api(path, options = {}) {
   })
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `Error ${res.status}`) }
   return res.json()
+}
+
+function genBatchId(name = '') {
+  const now = new Date()
+  const dd = String(now.getDate()).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const code = name.trim().slice(0, 3).toUpperCase().replace(/\s/g, '') || '???'
+  return `MH-${dd}${mm}-${code}`
 }
 
 const STATUS_COLORS = {
@@ -89,13 +97,9 @@ function ImageUpload({ value, onChange }) {
     try {
       const ext = file.name.split('.').pop()
       const fileName = `crop-${Date.now()}.${ext}`
-      const { data, error } = await supabase.storage
-        .from('crop-images')
-        .upload(fileName, file, { upsert: true })
+      const { error } = await supabase.storage.from('crop-images').upload(fileName, file, { upsert: true })
       if (error) throw error
-      const { data: urlData } = supabase.storage
-        .from('crop-images')
-        .getPublicUrl(fileName)
+      const { data: urlData } = supabase.storage.from('crop-images').getPublicUrl(fileName)
       setPreview(urlData.publicUrl)
       onChange(urlData.publicUrl)
     } catch (err) {
@@ -109,17 +113,12 @@ function ImageUpload({ value, onChange }) {
     <div style={{ marginBottom: 14 }}>
       <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Crop Photo</label>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        {preview ? (
-          <img src={preview} alt="crop" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1.5px solid #ddd' }} />
-        ) : (
-          <div style={{ width: 80, height: 80, background: '#f5f5f5', borderRadius: 10, border: '1.5px dashed #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🌿</div>
-        )}
+        {preview
+          ? <img src={preview} alt="crop" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1.5px solid #ddd' }} />
+          : <div style={{ width: 80, height: 80, background: '#f5f5f5', borderRadius: 10, border: '1.5px dashed #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🌿</div>
+        }
         <div>
-          <label style={{
-            background: '#2E7D32', color: 'white', padding: '8px 16px', borderRadius: 8,
-            fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
-            opacity: uploading ? 0.6 : 1, display: 'inline-block'
-          }}>
+          <label style={{ background: '#2E7D32', color: 'white', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1, display: 'inline-block' }}>
             {uploading ? 'Uploading…' : '📷 Upload Photo'}
             <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} disabled={uploading} />
           </label>
@@ -141,12 +140,12 @@ function StatsSection() {
   const [stats, setStats] = useState(null)
   useEffect(() => { api('/admin/stats').then(r => setStats(r.data)).catch(() => {}) }, [])
   const cards = stats ? [
-    { label: "Today's Orders",   value: stats.today_orders,   icon: '📦', color: '#2E7D32' },
-    { label: 'Pending Orders',   value: stats.pending_orders, icon: '⏳', color: '#E65100' },
-    { label: "Today's Revenue",  value: `₹${stats.today_revenue}`, icon: '💰', color: '#1565C0' },
-    { label: 'Total Users',      value: stats.total_users,    icon: '👥', color: '#6A1B9A' },
-    { label: 'Active Crops',     value: stats.active_crops,   icon: '🌾', color: '#2E7D32' },
-    { label: 'Total Farmers',    value: stats.total_farmers,  icon: '👨‍🌾', color: '#795548' },
+    { label: "Today's Orders",  value: stats.today_orders,        icon: '📦', color: '#2E7D32' },
+    { label: 'Pending Orders',  value: stats.pending_orders,      icon: '⏳', color: '#E65100' },
+    { label: "Today's Revenue", value: `₹${stats.today_revenue}`, icon: '💰', color: '#1565C0' },
+    { label: 'Total Users',     value: stats.total_users,         icon: '👥', color: '#6A1B9A' },
+    { label: 'Active Crops',    value: stats.active_crops,        icon: '🌾', color: '#2E7D32' },
+    { label: 'Total Farmers',   value: stats.total_farmers,       icon: '👨‍🌾', color: '#795548' },
   ] : []
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 14, marginBottom: 28 }}>
@@ -225,15 +224,13 @@ function OrdersTab() {
                   <td style={{ padding: '12px 14px', color: '#888', fontSize: 11 }}>{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
                   <td style={{ padding: '12px 14px' }}>
                     {NEXT[o.status] && (
-                      <Btn size="sm" variant="primary" disabled={updating === o.id}
-                        onClick={() => updateStatus(o.id, NEXT[o.status])}>
+                      <Btn size="sm" variant="primary" disabled={updating === o.id} onClick={() => updateStatus(o.id, NEXT[o.status])}>
                         → {NEXT[o.status]}
                       </Btn>
                     )}
                     {o.status === 'harvesting' && (
                       <span style={{ marginLeft: 6 }}>
-                        <Btn size="sm" variant="danger" disabled={updating === o.id}
-                          onClick={() => updateStatus(o.id, 'cancelled')}>Cancel</Btn>
+                        <Btn size="sm" variant="danger" disabled={updating === o.id} onClick={() => updateStatus(o.id, 'cancelled')}>Cancel</Btn>
                       </span>
                     )}
                   </td>
@@ -261,7 +258,6 @@ function FarmersTab() {
 
   const openAdd  = () => { setForm({ state: 'Telangana', is_active: true, is_verified: false }); setModal('add') }
   const openEdit = (f) => { setForm({ ...f }); setModal(f) }
-
   const save = async () => {
     setSaving(true)
     try {
@@ -270,7 +266,6 @@ function FarmersTab() {
       setModal(null); load()
     } catch (e) { alert(e.message) } finally { setSaving(false) }
   }
-
   const verify     = async (id) => { await api(`/admin/farmers/${id}/verify`, { method: 'PATCH' }); load() }
   const deactivate = async (id) => { if (confirm('Deactivate this farmer?')) { await api(`/admin/farmers/${id}`, { method: 'DELETE' }); load() } }
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -355,7 +350,10 @@ function CropsTab() {
   }
   useEffect(() => { load() }, [])
 
-  const openAdd  = () => { setForm({ is_organic: false, is_available: true, category: 'vegetables' }); setModal('add') }
+  const openAdd = () => {
+    setForm({ is_organic: false, is_available: true, category: 'vegetables', batch_id: genBatchId('') })
+    setModal('add')
+  }
   const openEdit = (c) => { setForm({ ...c, farmer_id: c.farmer_id }); setModal(c) }
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -447,12 +445,20 @@ function CropsTab() {
             </select>
           </div>
 
-          {/* Image Upload — replaces emoji */}
           <ImageUpload value={form.image_url || ''} onChange={v => set('image_url', v)} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <Input label="Crop Name *" value={form.name || ''} onChange={e => set('name', e.target.value)} placeholder="e.g. Tomato" />
-          </div>
+          {/* Crop Name — auto generates Batch ID */}
+          <Input
+            label="Crop Name *"
+            value={form.name || ''}
+            onChange={e => {
+              const name = e.target.value
+              set('name', name)
+              set('batch_id', genBatchId(name))
+            }}
+            placeholder="e.g. Tomato"
+          />
+
           <div style={{ marginBottom: 14 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Category *</label>
             <select value={form.category || 'vegetables'} onChange={e => set('category', e.target.value)}
@@ -460,8 +466,21 @@ function CropsTab() {
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+
           <Input label="Description" value={form.description || ''} onChange={e => set('description', e.target.value)} placeholder="Short description" />
-          <Input label="Batch ID" value={form.batch_id || ''} onChange={e => set('batch_id', e.target.value)} placeholder="e.g. MH-0303-TOM" />
+
+          {/* Batch ID — auto filled, still editable */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>
+              Batch ID <span style={{ color: '#2E7D32', fontWeight: 400, fontSize: 11 }}>(auto-generated)</span>
+            </label>
+            <input
+              value={form.batch_id || ''}
+              onChange={e => set('batch_id', e.target.value)}
+              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #C8E6C9', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', background: '#F1F8E9', fontFamily: 'monospace', color: '#2E7D32', fontWeight: 600 }}
+            />
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <Input label="Price/kg (₹) *" type="number" value={form.price_per_kg || ''} onChange={e => set('price_per_kg', e.target.value)} />
             <Input label="Harvested (kg) *" type="number" value={form.harvested_qty_kg || ''} onChange={e => set('harvested_qty_kg', e.target.value)} />
@@ -579,9 +598,7 @@ export default function Admin() {
     <div style={{ minHeight: '100vh', background: '#f7f8fa', paddingTop: 80 }}>
       <div style={{ background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)', padding: '28px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <h1 style={{ color: 'white', fontFamily: 'Georgia, serif', fontSize: 26, fontWeight: 700, margin: 0 }}>
-            🌾 ManaHarvest Admin
-          </h1>
+          <h1 style={{ color: 'white', fontFamily: 'Georgia, serif', fontSize: 26, fontWeight: 700, margin: 0 }}>🌾 ManaHarvest Admin</h1>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 4 }}>Welcome back, {user.name}</p>
         </div>
       </div>
