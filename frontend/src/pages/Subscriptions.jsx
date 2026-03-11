@@ -13,7 +13,7 @@ export default function Subscriptions() {
   const handleSelect = (planId) => {
     setSelected(planId)
     if (!user) { navigate('/login', { state: { from: '/subscribe' } }); return }
-    navigate('/dashboard')
+    navigate(`/plan-harvest?plan=${planId}`)
   }
 
   return (
