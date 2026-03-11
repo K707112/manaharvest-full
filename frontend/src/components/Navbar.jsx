@@ -32,6 +32,7 @@ export default function Navbar() {
     { to: '/farmers', label: 'Our Farmers' },
     { to: '/subscribe', label: 'Subscribe' },
     { to: '/track', label: 'Track Order' },
+    { to: '/contact', label: 'Contact' },
   ]
 
   const isActive = (to) => location.pathname === to
