@@ -138,7 +138,7 @@ export default function Home() {
               All plans <ChevronRight size={14} />
             </button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }} className="plans-row">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }} className="plans-row" id="plans-row">
             {PLANS.map(p => (
               <div key={p.id} onClick={() => navigate(`/plan-harvest?plan=${p.id}`)}
                 style={{
@@ -241,15 +241,16 @@ export default function Home() {
       </div>
 
       <style>{`
-        @media (max-width: 600px) {
-          .cat-grid { grid-template-columns: repeat(4, 1fr) !important; }
-          .plans-row { grid-template-columns: 1fr !important; }
-        }
-        @media (min-width: 601px) and (max-width: 900px) {
-          .cat-grid { grid-template-columns: repeat(4, 1fr) !important; }
-          .plans-row { grid-template-columns: repeat(3, 1fr) !important; }
-        }
-      `}</style>
+  @media (max-width: 600px) {
+    .cat-grid { grid-template-columns: repeat(4, 1fr) !important; }
+    #plans-row { grid-template-columns: repeat(2, 1fr) !important; }
+    #plans-row > div:last-child { grid-column: span 2; max-width: 260px; margin: 0 auto; width: 100%; }
+  }
+  @media (min-width: 601px) and (max-width: 900px) {
+    .cat-grid { grid-template-columns: repeat(4, 1fr) !important; }
+    #plans-row { grid-template-columns: repeat(3, 1fr) !important; }
+  }
+`    }</style>
     </div>
   )
 }
