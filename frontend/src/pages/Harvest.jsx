@@ -1,6 +1,6 @@
-// src/pages/Harvest.jsx — with subscription plan support
-import { useState, useEffect } from 'react'
-import { Clock, ShoppingCart, Search } from 'lucide-react'
+// src/pages/Harvest.jsx — Blinkit/Zepto style
+import { useState, useEffect, useRef } from 'react'
+import { ShoppingCart, Search, Plus, Minus, Clock } from 'lucide-react'
 import { cropsAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -11,11 +11,10 @@ const PLAN_INFO = {
   large:  { name: 'Large Family',  price: 999,  maxKg: 15, vegetables: 10, color: '#6A1B9A', bg: '#F3E5F5' },
 }
 
-const QTY_OPTIONS = [
-  { label: '200g', value: 0.2 },
-  { label: '500g', value: 0.5 },
-  { label: '1 kg', value: 1.0 },
-]
+const CAT_ICONS = {
+  all: '🛒', vegetables: '🥬', fruits: '🍎', leafy: '🌿', roots: '🥕',
+  gourds: '🥒', beans: '🫛', herbs: '🌿', default: '🌾'
+}
 
 function Countdown() {
   const now = new Date()
@@ -28,19 +27,19 @@ function Countdown() {
 }
 
 export default function Harvest() {
-  const [crops, setCrops]       = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState('')
-  const [search, setSearch]     = useState('')
-  const [cat, setCat]           = useState('all')
-  const [time, setTime]         = useState(Countdown())
-  const [added, setAdded]       = useState({})
-  const [qty, setQty]           = useState({})   // cropId → kg value
-  const [planCart, setPlanCart] = useState([])   // items selected for plan
-  const { addToCart }           = useAuth()
-  const [searchParams]          = useSearchParams()
-  const planId                  = searchParams.get('plan')
-  const plan                    = planId ? PLAN_INFO[planId] : null
+  const [crops, setCrops]     = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState('')
+  const [search, setSearch]   = useState('')
+  const [cat, setCat]         = useState('all')
+  const [time, setTime]       = useState(Countdown())
+  const [qtys, setQtys]       = useState({})       // cropId → qty (number)
+  const [planCart, setPlanCart] = useState([])
+  const { addToCart }         = useAuth()
+  const [searchParams]        = useSearchParams()
+  const planId                = searchParams.get('plan')
+  const plan                  = planId ? PLAN_INFO[planId] : null
+  const sidebarRef            = useRef(null)
 
   useEffect(() => {
     cropsAPI.getAll({ limit: 50 })
@@ -54,6 +53,12 @@ export default function Harvest() {
     return () => clearInterval(t)
   }, [])
 
+  // Read search from URL param
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) setSearch(q)
+  }, [searchParams])
+
   const categories = ['all', ...new Set(crops.map(c => c.category).filter(Boolean))]
 
   const filtered = crops.filter(p => {
@@ -63,273 +68,292 @@ export default function Harvest() {
     return matchCat && matchSearch
   })
 
-  // Total kg selected in plan
-  const totalKg = planCart.reduce((sum, i) => sum + i.qty, 0)
+  const totalKg = planCart.reduce((s, i) => s + i.qty, 0)
 
-  const handleAdd = (crop) => {
-    const selectedQty = qty[crop.id] || 1
+  const getQty = (id) => qtys[id] || 0
+
+  const increment = (crop) => {
+    const newQty = getQty(crop.id) + 1
+    if (plan && totalKg >= plan.maxKg) return
+    setQtys(q => ({ ...q, [crop.id]: newQty }))
     addToCart({
-      id:      crop.id,
-      name:    crop.name,
-      emoji:   crop.emoji || '🌿',
-      image:   crop.image_url || null,
-      price:   crop.dynamic_price || crop.price_per_kg,
-      unit:    'kg',
-      qty:     selectedQty,
-      batchId: crop.batch_id,
-      planId:  planId || null,
+      id: crop.id, name: crop.name, emoji: crop.emoji || '🌿',
+      image: crop.image_url || null,
+      price: crop.dynamic_price || crop.price_per_kg,
+      unit: 'kg', qty: 1, batchId: crop.batch_id, planId: planId || null,
     })
-
     if (plan) {
       setPlanCart(prev => {
         const exists = prev.find(i => i.id === crop.id)
-        if (exists) return prev.map(i => i.id === crop.id ? { ...i, qty: i.qty + selectedQty } : i)
-        return [...prev, { id: crop.id, name: crop.name, qty: selectedQty }]
+        if (exists) return prev.map(i => i.id === crop.id ? { ...i, qty: i.qty + 1 } : i)
+        return [...prev, { id: crop.id, name: crop.name, qty: 1 }]
       })
     }
-
-    setAdded(a => ({ ...a, [crop.id]: true }))
-    setTimeout(() => setAdded(a => ({ ...a, [crop.id]: false })), 1500)
     cropsAPI.incrementView(crop.id).catch(() => {})
   }
 
+  const decrement = (crop) => {
+    const cur = getQty(crop.id)
+    if (cur <= 0) return
+    const newQty = cur - 1
+    setQtys(q => ({ ...q, [crop.id]: newQty }))
+    if (plan) {
+      setPlanCart(prev => {
+        const updated = prev.map(i => i.id === crop.id ? { ...i, qty: i.qty - 1 } : i).filter(i => i.qty > 0)
+        return updated
+      })
+    }
+  }
+
+  const scrollCat = (c) => {
+    setCat(c)
+    setSearch('')
+  }
+
   return (
-    <div className="page-enter" style={{ paddingTop: 80 }}>
-      {/* ── PLAN BANNER ── */}
+    <div style={{ paddingTop: 60, background: '#f5f6f7', minHeight: '100vh' }}>
+
+      {/* ── Plan Banner ── */}
       {plan && (
-        <div style={{ background: plan.bg, borderBottom: `3px solid ${plan.color}`, padding: '14px 0' }}>
-          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ background: plan.color, color: 'white', padding: '4px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700 }}>
-                {plan.name} Plan — ₹{plan.price}/week
-              </span>
-              <span style={{ fontSize: 13, color: plan.color, fontWeight: 600 }}>
-                Pick up to {plan.vegetables} vegetables · Max {plan.maxKg}kg total
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {/* Weight progress */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 120, height: 8, background: '#ddd', borderRadius: 99, overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%', borderRadius: 99,
-                    background: totalKg >= plan.maxKg ? '#B71C1C' : plan.color,
-                    width: `${Math.min(100, (totalKg / plan.maxKg) * 100)}%`,
-                    transition: 'width .3s'
-                  }} />
-                </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: plan.color }}>
-                  {totalKg.toFixed(1)}/{plan.maxKg}kg
-                </span>
+        <div style={{ background: plan.bg, borderBottom: `3px solid ${plan.color}`, padding: '10px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto', flexWrap: 'wrap', gap: 8 }}>
+            <span style={{ background: plan.color, color: 'white', padding: '4px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700 }}>
+              {plan.name} — ₹{plan.price}/week
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 100, height: 6, background: '#ddd', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: 99, background: plan.color, width: `${Math.min(100, (totalKg / plan.maxKg) * 100)}%`, transition: 'width .3s' }} />
               </div>
-              <span style={{ fontSize: 13, color: plan.color, fontWeight: 600 }}>
-                {planCart.length}/{plan.vegetables} selected
-              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: plan.color }}>{totalKg.toFixed(1)}/{plan.maxKg}kg</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── HEADER ── */}
-      <div style={{ background: 'linear-gradient(135deg, var(--green) 0%, #1B5E20 100%)', padding: '48px 0 40px', color: 'white' }}>
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+      {/* ── Top Header ── */}
+      <div style={{ background: 'linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%)', padding: '20px 16px 16px', color: 'white' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <span style={{ width: 10, height: 10, background: '#A5D6A7', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <span style={{ width: 8, height: 8, background: '#A5D6A7', borderRadius: '50%', display: 'inline-block' }} />
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
                   Live Today — {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
                 </span>
               </div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem,4vw,2.8rem)', fontWeight: 700, marginBottom: 8 }}>Today's Harvest</h1>
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15 }}>
-                {plan ? `Building your ${plan.name} box — pick your vegetables below` : 'All harvested this morning. Orders close at 2:00 PM.'}
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 22, fontWeight: 700, margin: 0 }}>Today's Harvest</h1>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
+                All harvested this morning. Orders close at 2:00 PM.
               </p>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.25)', borderRadius: 16, padding: '16px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginBottom: 4 }}>Orders close in</div>
-              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--font-display)' }}>{time}</div>
+            <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '10px 14px', textAlign: 'center', flexShrink: 0 }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>Orders close in</div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>{time}</div>
             </div>
+          </div>
+          {/* Search */}
+          <div style={{ position: 'relative' }}>
+            <Search size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search crops, farms…"
+              style={{
+                width: '100%', height: 42, paddingLeft: 42, paddingRight: 16,
+                borderRadius: 10, border: 'none', fontSize: 14,
+                background: 'white', boxSizing: 'border-box',
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            />
           </div>
         </div>
       </div>
 
-      <div className="container section">
-        {/* ── Search & Filter ── */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
-            <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input className="form-input" placeholder="Search crops, farms…" value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 42 }} />
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {categories.map(c => (
-              <button key={c} onClick={() => setCat(c)} style={{
-                padding: '8px 18px', borderRadius: 99, fontSize: 13, fontWeight: 500,
-                background: cat === c ? 'var(--green)' : 'white',
-                color: cat === c ? 'white' : 'var(--text-muted)',
-                border: cat === c ? 'none' : '1.5px solid var(--border)',
-                cursor: 'pointer', transition: 'all .2s', textTransform: 'capitalize'
-              }}>{c}</button>
-            ))}
-          </div>
+      {/* ── Body: Sidebar + Grid ── */}
+      <div style={{ display: 'flex', maxWidth: 1200, margin: '0 auto', minHeight: 'calc(100vh - 200px)' }}>
+
+        {/* ── Left Sidebar ── */}
+        <div ref={sidebarRef} style={{
+          width: 80, flexShrink: 0,
+          background: 'white',
+          borderRight: '1px solid #eee',
+          position: 'sticky', top: 60,
+          height: 'calc(100vh - 60px)',
+          overflowY: 'auto',
+          display: 'flex', flexDirection: 'column',
+          scrollbarWidth: 'none',
+        }}>
+          {categories.map(c => {
+            const icon = CAT_ICONS[c.toLowerCase()] || CAT_ICONS.default
+            const active = cat === c
+            return (
+              <button key={c} onClick={() => scrollCat(c)} style={{
+                width: '100%', padding: '14px 4px', border: 'none', cursor: 'pointer',
+                background: active ? '#E8F5E9' : 'transparent',
+                borderLeft: active ? '3px solid #2E7D32' : '3px solid transparent',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                transition: 'all .15s',
+              }}>
+                <span style={{ fontSize: 22 }}>{icon}</span>
+                <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? '#2E7D32' : '#888', textTransform: 'capitalize', lineHeight: 1.2, textAlign: 'center' }}>
+                  {c === 'all' ? 'All' : c}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🌾</div>
-            <p>Loading today's harvest…</p>
+        {/* ── Right Products Grid ── */}
+        <div style={{ flex: 1, padding: '12px 12px 100px' }}>
+
+          {/* Section title */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h2 style={{ fontWeight: 700, fontSize: 15, color: '#222', margin: 0, textTransform: 'capitalize' }}>
+              {cat === 'all' ? 'All Crops' : cat} <span style={{ color: '#aaa', fontWeight: 400, fontSize: 13 }}>({filtered.length})</span>
+            </h2>
           </div>
-        )}
 
-        {/* Error */}
-        {error && (
-          <div style={{ background: '#FFEBEE', color: '#C62828', padding: 20, borderRadius: 12, textAlign: 'center', marginBottom: 24 }}>
-            ⚠️ {error}
-          </div>
-        )}
+          {loading && (
+            <div style={{ textAlign: 'center', padding: 48, color: '#aaa', fontSize: 32 }}>🌾</div>
+          )}
 
-        {/* ── Grid ── */}
-        {!loading && !error && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
-            {filtered.map(p => {
-              const inPlan = planCart.find(i => i.id === p.id)
-              return (
-                <div key={p.id} className="card" style={{
-                  padding: 0, overflow: 'hidden', transition: 'transform .2s, box-shadow .2s',
-                  border: inPlan ? '2px solid var(--green)' : '1px solid var(--border)'
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
-                  <div style={{ height: 6, background: inPlan ? 'var(--green)' : 'var(--green)' }} />
+          {error && (
+            <div style={{ background: '#FFEBEE', color: '#C62828', padding: 16, borderRadius: 10, fontSize: 13, textAlign: 'center' }}>⚠️ {error}</div>
+          )}
 
-                  {/* Crop Image or Emoji */}
-                  {p.image_url ? (
-                    <img src={p.image_url} alt={p.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
-                  ) : null}
-
-                  <div style={{ padding: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                      {!p.image_url && <div style={{ fontSize: 48 }}>{p.emoji || '🌿'}</div>}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', marginLeft: 'auto' }}>
-                        {p.freshness_score && (
-                          <span className="badge badge-green" style={{ fontSize: 11 }}>
-                            <Clock size={10} /> {Math.round(p.freshness_score)}% fresh
-                          </span>
+          {!loading && !error && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {filtered.map(crop => {
+                const qty = getQty(crop.id)
+                const inPlan = planCart.find(i => i.id === crop.id)
+                return (
+                  <div key={crop.id} style={{
+                    background: 'white', borderRadius: 12, overflow: 'hidden',
+                    border: inPlan ? '1.5px solid #2E7D32' : '1px solid #eee',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+                    display: 'flex', flexDirection: 'column',
+                    position: 'relative',
+                  }}>
+                    {/* Image */}
+                    <div style={{ position: 'relative' }}>
+                      {crop.image_url
+                        ? <img src={crop.image_url} alt={crop.name} style={{ width: '100%', height: 120, objectFit: 'cover' }} />
+                        : <div style={{ height: 100, background: '#f1f8e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>{crop.emoji || '🌿'}</div>
+                      }
+                      {/* Badges */}
+                      <div style={{ position: 'absolute', top: 6, left: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {crop.is_organic && (
+                          <span style={{ background: '#2E7D32', color: 'white', fontSize: 8, fontWeight: 700, padding: '2px 6px', borderRadius: 99 }}>Organic</span>
                         )}
-                        {p.stock_left_kg < 25 && (
-                          <span className="badge badge-orange" style={{ fontSize: 11 }}>Only {p.stock_left_kg}kg left</span>
-                        )}
-                        {inPlan && (
-                          <span className="badge badge-green" style={{ fontSize: 11 }}>✓ In your box ({inPlan.qty}kg)</span>
+                        {crop.stock_left_kg < 25 && (
+                          <span style={{ background: '#FF6F00', color: 'white', fontSize: 8, fontWeight: 700, padding: '2px 6px', borderRadius: 99 }}>Only {crop.stock_left_kg}kg left</span>
                         )}
                       </div>
-                    </div>
-
-                    <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{p.name}</h3>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
-                      {p.farmers?.name} · {p.farmers?.village}
-                    </p>
-                    {p.description && (
-                      <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>{p.description}</p>
-                    )}
-
-                    {/* Batch ID */}
-                    <Link to={`/batch/${p.batch_id}`} style={{ display: 'block', marginBottom: 14 }}>
-                      <div style={{ background: 'var(--cream)', borderRadius: 8, padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Batch ID</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', fontFamily: 'monospace' }}>{p.batch_id}</span>
-                      </div>
-                    </Link>
-
-                    {/* Tags */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 16 }}>
-                      {p.is_organic && <span className="badge badge-green" style={{ fontSize: 10 }}>Organic</span>}
-                      {p.waste_risk === 'low' && <span className="badge badge-green" style={{ fontSize: 10 }}>Fresh Stock</span>}
-                    </div>
-
-                    {/* Quantity selector — only show when plan is active */}
-                    {plan && (
-                      <div style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>SELECT QUANTITY</div>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          {QTY_OPTIONS.map(q => (
-                            <button key={q.value} onClick={() => setQty(prev => ({ ...prev, [p.id]: q.value }))}
-                              style={{
-                                flex: 1, padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                                border: (qty[p.id] || 1) === q.value ? '2px solid var(--green)' : '1.5px solid var(--border)',
-                                background: (qty[p.id] || 1) === q.value ? 'var(--green-pale)' : 'white',
-                                color: (qty[p.id] || 1) === q.value ? 'var(--green)' : 'var(--text-muted)',
-                                cursor: 'pointer'
-                              }}>
-                              {q.label}
-                            </button>
-                          ))}
+                      {/* Freshness */}
+                      {crop.freshness_score && (
+                        <div style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: 9, padding: '2px 6px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <Clock size={9} /> {Math.round(crop.freshness_score)}%
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
-                    {/* Price & Cart */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--green)' }}>
-                        ₹{p.dynamic_price || p.price_per_kg}
-                        <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-muted)' }}>/kg</span>
-                      </span>
-                      <button onClick={() => handleAdd(p)} className="btn btn-primary btn-sm"
-                        disabled={plan && totalKg >= plan.maxKg && !inPlan}
-                        style={{
-                          background: added[p.id] ? '#388E3C' : 'var(--green)',
-                          opacity: (plan && totalKg >= plan.maxKg && !inPlan) ? 0.4 : 1
-                        }}>
-                        {added[p.id] ? '✓ Added' : <><ShoppingCart size={14} /> {plan ? 'Add to Box' : 'Add'}</>}
-                      </button>
+                    {/* Info */}
+                    <div style={{ padding: '10px 10px 8px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      {/* Quantity shown for plan */}
+                      {inPlan && (
+                        <div style={{ fontSize: 9, color: '#2E7D32', fontWeight: 700, marginBottom: 3 }}>✓ {inPlan.qty}kg in box</div>
+                      )}
+
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#222', marginBottom: 1, lineHeight: 1.2 }}>{crop.name}</div>
+                      <div style={{ fontSize: 10, color: '#aaa', marginBottom: 6 }}>{crop.farmers?.name} · {crop.farmers?.village}</div>
+
+                      {/* Batch */}
+                      <Link to={`/batch/${crop.batch_id}`} style={{ textDecoration: 'none' }}>
+                        <div style={{ background: '#f5f5f5', borderRadius: 6, padding: '4px 6px', marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 9, color: '#aaa' }}>Batch</span>
+                          <span style={{ fontSize: 9, color: '#2E7D32', fontWeight: 600, fontFamily: 'monospace' }}>{crop.batch_id}</span>
+                        </div>
+                      </Link>
+
+                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span style={{ fontWeight: 800, fontSize: 15, color: '#222' }}>₹{crop.dynamic_price || crop.price_per_kg}</span>
+                          <span style={{ fontSize: 10, color: '#aaa' }}>/kg</span>
+                        </div>
+
+                        {/* Add / Qty control */}
+                        {qty === 0 ? (
+                          <button onClick={() => increment(crop)}
+                            disabled={plan && totalKg >= plan.maxKg}
+                            style={{
+                              height: 32, padding: '0 14px', borderRadius: 8, border: '1.5px solid #2E7D32',
+                              background: 'white', color: '#2E7D32',
+                              fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: 4,
+                              opacity: plan && totalKg >= plan.maxKg ? 0.4 : 1,
+                            }}>
+                            <Plus size={14} /> ADD
+                          </button>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#2E7D32', borderRadius: 8, padding: '4px 8px' }}>
+                            <button onClick={() => decrement(crop)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 0 }}>
+                              <Minus size={14} />
+                            </button>
+                            <span style={{ color: 'white', fontWeight: 700, fontSize: 13, minWidth: 16, textAlign: 'center' }}>{qty}</span>
+                            <button onClick={() => increment(crop)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 0 }}>
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {!loading && !error && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
-            <p>No crops match your search.</p>
-          </div>
-        )}
-
-        {/* ── Plan summary bottom bar ── */}
-        {plan && planCart.length > 0 && (
-          <div style={{
-            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-            background: 'white', borderTop: '2px solid var(--border)',
-            padding: '16px 24px', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)'
-          }}>
-            <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>
-                  {plan.name} Box — {planCart.length} items · {totalKg.toFixed(1)}kg
-                </div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                  {planCart.map(i => `${i.name} (${i.qty}kg)`).join(', ')}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--green)' }}>
-                  ₹{plan.price}/week
-                </span>
-                <Link to="/cart">
-                  <button className="btn btn-primary">
-                    <ShoppingCart size={16} /> View Cart →
-                  </button>
-                </Link>
-              </div>
+                )
+              })}
             </div>
-          </div>
-        )}
+          )}
+
+          {!loading && !error && filtered.length === 0 && (
+            <div style={{ textAlign: 'center', padding: 48, color: '#aaa' }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>🔍</div>
+              <p style={{ fontSize: 14 }}>No crops found</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
+      {/* ── Plan sticky bottom bar ── */}
+      {plan && planCart.length > 0 && (
+        <div style={{
+          position: 'fixed', bottom: 64, left: 0, right: 0, zIndex: 150,
+          background: '#2E7D32', padding: '12px 20px',
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.15)'
+        }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>
+                {planCart.length} items · {totalKg.toFixed(1)}kg selected
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>
+                {planCart.slice(0, 3).map(i => i.name).join(', ')}{planCart.length > 3 ? ` +${planCart.length - 3} more` : ''}
+              </div>
+            </div>
+            <Link to="/cart" style={{ textDecoration: 'none' }}>
+              <button style={{ background: 'white', color: '#2E7D32', padding: '8px 20px', borderRadius: 99, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <ShoppingCart size={14} /> View Cart →
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        ::-webkit-scrollbar { width: 0; }
+        @media (min-width: 768px) {
+          .harvest-grid { grid-template-columns: repeat(3, 1fr) !important; }
+        }
+      `}</style>
     </div>
   )
 }
