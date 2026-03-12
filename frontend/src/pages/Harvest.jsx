@@ -325,7 +325,7 @@ export default function Harvest() {
       {/* ── Plan sticky bottom bar ── */}
       {plan && planCart.length > 0 && (
         <div style={{
-          position: 'fixed', bottom: 64, left: 0, right: 0, zIndex: 150,
+          position: 'fixed', bottom: 68, left: 0, right: 0, zIndex: 300,
           background: '#2E7D32', padding: '12px 20px',
           boxShadow: '0 -4px 20px rgba(0,0,0,0.15)'
         }}>
