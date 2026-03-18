@@ -387,6 +387,11 @@ export default function Home() {
         style={{ position: 'fixed', bottom: 80, right: 16, zIndex: 500, width: 56, height: 56, background: '#25D366', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(37,211,102,0.4)', textDecoration: 'none', fontSize: 28 }}>
         💬
       </a>
+       {/* ── AI BOX FLOATING ── */}
+      <button onClick={() => navigate('/smart-box')}
+        style={{ position: 'fixed', bottom: 148, right: 16, zIndex: 500, width: 56, height: 56, background: '#2E7D32', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(46,125,50,0.4)', border: 'none', cursor: 'pointer', fontSize: 26 }}>
+        🤖
+      </button>
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
