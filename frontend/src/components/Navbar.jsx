@@ -76,6 +76,7 @@ export default function Navbar() {
             { to: '/harvest', label: "Today's Harvest" },
             { to: '/farmers', label: 'Farmers' },
             { to: '/subscribe', label: 'Subscribe' },
+            { to: '/smart-box', label: '🤖 AI Box' },
             { to: '/contact', label: 'Contact' },
           ].map(l => (
             <Link key={l.to} to={l.to} style={{

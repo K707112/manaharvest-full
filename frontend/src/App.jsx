@@ -16,6 +16,7 @@ import BatchInfo from './pages/BatchInfo'
 import Cart from './pages/Cart'
 import Admin from './pages/Admin'
 import Contact from './pages/Contact'
+import SmartBox from './pages/SmartBox'
 
 function Layout({ children, hideFooter }) {
   return (
@@ -33,17 +34,18 @@ export default function App() {
     <HashRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login"        element={<Login />} />
-          <Route path="/"             element={<Layout><Home /></Layout>} />
-          <Route path="/harvest"      element={<Layout><Harvest /></Layout>} />
-          <Route path="/farmers"      element={<Layout><Farmers /></Layout>} />
-          <Route path="/subscribe"    element={<Layout><Subscriptions /></Layout>} />
-          <Route path="/plan-harvest" element={<Layout hideFooter><PlanHarvest /></Layout>} />
-          <Route path="/track"        element={<Layout><Tracking /></Layout>} />
-          <Route path="/dashboard"    element={<Layout><Dashboard /></Layout>} />
-          <Route path="/cart"         element={<Layout><Cart /></Layout>} />
-          <Route path="/contact"      element={<Layout><Contact /></Layout>} />
-          <Route path="/admin"        element={<Admin />} />
+          <Route path="/login"          element={<Login />} />
+          <Route path="/"               element={<Layout><Home /></Layout>} />
+          <Route path="/harvest"        element={<Layout><Harvest /></Layout>} />
+          <Route path="/farmers"        element={<Layout><Farmers /></Layout>} />
+          <Route path="/subscribe"      element={<Layout><Subscriptions /></Layout>} />
+          <Route path="/plan-harvest"   element={<Layout hideFooter><PlanHarvest /></Layout>} />
+          <Route path="/smart-box"      element={<Layout><SmartBox /></Layout>} />
+          <Route path="/track"          element={<Layout><Tracking /></Layout>} />
+          <Route path="/dashboard"      element={<Layout><Dashboard /></Layout>} />
+          <Route path="/cart"           element={<Layout><Cart /></Layout>} />
+          <Route path="/contact"        element={<Layout><Contact /></Layout>} />
+          <Route path="/admin"          element={<Admin />} />
           <Route path="/batch/:batchId" element={<Layout><BatchInfo /></Layout>} />
         </Routes>
       </AuthProvider>

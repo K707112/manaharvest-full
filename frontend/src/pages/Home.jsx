@@ -202,6 +202,18 @@ export default function Home() {
             <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 16px', borderRadius: 99, fontSize: 11, fontWeight: 700 }}>WEEKLY SUBSCRIPTION</span>
             <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.6rem,4vw,2.4rem)', margin: '12px 0 8px', color: '#3E2723' }}>Choose Your Weekly Box</h2>
             <p style={{ color: '#795548', fontSize: 14 }}>Order any day · Get it next morning by 10 AM · Cancel anytime</p>
+            {/* AI Box Builder button */}
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <button onClick={() => navigate('/smart-box')}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '12px 28px', borderRadius: 99, border: '2px solid #2E7D32',
+                  background: 'white', color: '#2E7D32', fontWeight: 700, fontSize: 14,
+                  cursor: 'pointer', boxShadow: '0 2px 12px rgba(46,125,50,0.15)'
+                }}>
+                🤖 Not sure? Let AI build your perfect box!
+              </button>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }} className="plans-grid">
             {PLANS.map(p => (
@@ -371,7 +383,7 @@ export default function Home() {
       </div>
 
       {/* ── WHATSAPP FLOATING ── */}
-      <a href="https://wa.me/919618582513" target="_blank" rel="noreferrer"
+      <a href="https://wa.me/917075573757" target="_blank" rel="noreferrer"
         style={{ position: 'fixed', bottom: 80, right: 16, zIndex: 500, width: 56, height: 56, background: '#25D366', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(37,211,102,0.4)', textDecoration: 'none', fontSize: 28 }}>
         💬
       </a>
