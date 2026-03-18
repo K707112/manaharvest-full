@@ -600,6 +600,9 @@ export default function Admin() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <h1 style={{ color: 'white', fontFamily: 'Georgia, serif', fontSize: 26, fontWeight: 700, margin: 0 }}>🌾 ManaHarvest Admin</h1>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 4 }}>Welcome back, {user.name}</p>
+          <a href="/#/admin/orders" style={{ background: '#F9A825', color: '#1B5E20', padding: '8px 18px', borderRadius: 10, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+            📦 Order Dashboard →
+          </a>
         </div>
       </div>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 24px' }}>

@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard'
 import BatchInfo from './pages/BatchInfo'
 import Cart from './pages/Cart'
 import Admin from './pages/Admin'
+import AdminOrders from './pages/AdminOrders'
 import Contact from './pages/Contact'
 import SmartBox from './pages/SmartBox'
 
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/cart"           element={<Layout><Cart /></Layout>} />
           <Route path="/contact"        element={<Layout><Contact /></Layout>} />
           <Route path="/admin"          element={<Admin />} />
+          <Route path="/admin/orders"   element={<AdminOrders />} />
           <Route path="/batch/:batchId" element={<Layout><BatchInfo /></Layout>} />
         </Routes>
       </AuthProvider>
