@@ -17,35 +17,36 @@ const CATEGORIES = [
 ]
 
 const PLANS = [
-  { id: 'small',  price: 399, label: 'Small Box',  kg: '12kg', color: '#1565C0', bg: '#E3F2FD', icon: '🥬', tag: 'Starter',     items: '12 vegetables' },
-  { id: 'medium', price: 699, label: 'Family Box', kg: '9kg',  color: '#2E7D32', bg: '#E8F5E9', icon: '🧺', tag: '⭐ Popular',  items: '12 vegetables' },
+  { id: 'small',  price: 399, label: 'Small Box',  kg: '12kg', color: '#1565C0', bg: '#E3F2FD', icon: '🥬', tag: 'Starter',    items: '12 vegetables' },
+  { id: 'medium', price: 699, label: 'Family Box', kg: '9kg',  color: '#2E7D32', bg: '#E8F5E9', icon: '🧺', tag: '⭐ Popular', items: '12 vegetables' },
   { id: 'large',  price: 999, label: 'Big Box',    kg: '15kg', color: '#795548', bg: '#EFEBE9', icon: '🏡', tag: 'Best Value', items: '12 vegetables' },
 ]
 
 const STEPS = [
-  { icon: '📱', step: '01', title: 'Choose Your Plan',    desc: 'Pick ₹399, ₹699 or ₹999 weekly box based on your family size' },
-  { icon: '🥬', step: '02', title: 'Select Vegetables',   desc: 'Choose from today\'s fresh harvest — you pick what goes in your box' },
-  { icon: '🌾', step: '03', title: 'We Harvest at Dawn',  desc: 'Our farmers harvest your vegetables fresh every Monday at 5 AM' },
-  { icon: '🛵', step: '04', title: 'Delivered by 10 AM',  desc: 'Hot from the farm to your doorstep — same morning delivery' },
+  { icon: '📱', step: '01', title: 'Choose Your Plan',       desc: 'Pick ₹399, ₹699 or ₹999 box based on your family size' },
+  { icon: '🥬', step: '02', title: 'Select Vegetables',      desc: 'Choose from today\'s fresh harvest — you pick what goes in your box' },
+  { icon: '🌾', step: '03', title: 'We Harvest at Dawn',     desc: 'Our farmers harvest your vegetables fresh next morning at 5 AM' },
+  { icon: '🛵', step: '04', title: 'Delivered by 10 AM',     desc: 'Fresh from the farm to your doorstep — next morning delivery' },
 ]
 
 const TESTIMONIALS = [
-  { name: 'Padma Lakshmi', area: 'MVP Colony',      text: 'I can taste the difference! These vegetables are so fresh compared to what I used to buy from the market.', rating: 5 },
-  { name: 'Ravi Kumar',    area: 'Rushikonda',       text: 'The batch QR code is amazing — I scanned it and saw exactly which farm my tomatoes came from!',             rating: 5 },
-  { name: 'Sunita Reddy',  area: 'Seethammadhara',  text: 'Best decision for my family. Fresh, healthy and delivered right to my door every Monday!',                   rating: 5 },
+  { name: 'Padma Lakshmi', area: 'MVP Colony',     text: 'I can taste the difference! These vegetables are so fresh compared to what I used to buy from the market.', rating: 5 },
+  { name: 'Ravi Kumar',    area: 'Rushikonda',      text: 'The batch QR code is amazing — I scanned it and saw exactly which farm my tomatoes came from!',             rating: 5 },
+  { name: 'Sunita Reddy',  area: 'Seethammadhara', text: 'Best decision for my family. Fresh, healthy and delivered right to my door next morning!',                   rating: 5 },
 ]
 
 const FARMERS = [
-  { name: 'Ramu Yadav',       village: 'Chevella',         crops: 'Tomatoes, Beans',   emoji: '👨‍🌾', years: '15 years farming' },
-  { name: 'Chukka Satyarao', village: 'Chinanandipalli',  crops: 'Spinach, Methi',    emoji: '🧑‍🌾', years: '20 years farming' },
-  { name: 'Lakshmi Devi',     village: 'Pendurthi',        crops: 'Carrots, Onions',   emoji: '👩‍🌾', years: '12 years farming' },
+  { name: 'Ramu Yadav',      village: 'Chevella',        crops: 'Tomatoes, Beans',  emoji: '👨‍🌾', years: '15 years farming' },
+  { name: 'Chukka Satyarao', village: 'Chinanandipalli', crops: 'Spinach, Methi',   emoji: '🧑‍🌾', years: '20 years farming' },
+  { name: 'Lakshmi Devi',    village: 'Pendurthi',       crops: 'Carrots, Onions',  emoji: '👩‍🌾', years: '12 years farming' },
 ]
 
+// ── Daily countdown to 8 PM cutoff ──
 function Countdown() {
   const now  = new Date()
   const next = new Date()
-  next.setDate(now.getDate() + ((0 - now.getDay() + 7) % 7 || 7))
-  next.setHours(20, 0, 0, 0)
+  next.setHours(20, 0, 0, 0) // 8 PM today
+  if (now >= next) next.setDate(next.getDate() + 1) // if past 8 PM → count to tomorrow 8 PM
   const diff = Math.max(0, next - now)
   return {
     d: Math.floor(diff / 86400000),
@@ -53,6 +54,13 @@ function Countdown() {
     m: Math.floor((diff % 3600000) / 60000),
     s: Math.floor((diff % 60000) / 1000),
   }
+}
+
+// ── Get tomorrow's date string ──
+function getTomorrow() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
 export default function Home() {
@@ -72,6 +80,7 @@ export default function Home() {
   }, [])
 
   const pad = n => String(n).padStart(2, '0')
+  const isPastCutoff = new Date().getHours() >= 20
 
   return (
     <div style={{ background: '#FFFBF5', paddingTop: 60 }}>
@@ -81,32 +90,56 @@ export default function Home() {
         <div style={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
         <div style={{ position: 'absolute', bottom: -40, left: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
         <div style={{ position: 'absolute', top: 20, right: 20, fontSize: 120, opacity: 0.07 }}>🌾</div>
+
         <div style={{ maxWidth: 800, margin: '0 auto', position: 'relative' }}>
+          {/* Live badge */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)', padding: '6px 16px', borderRadius: 99, marginBottom: 20 }}>
             <span style={{ width: 8, height: 8, background: '#69F0AE', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-            <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>LIVE HARVEST TODAY · {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}</span>
+            <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>FRESH VEGETABLES · ORDER TODAY · DELIVERED TOMORROW</span>
           </div>
+
+          {/* Headline */}
           <h1 style={{ color: 'white', fontSize: 'clamp(2rem,6vw,3.6rem)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1, letterSpacing: -1 }}>
             Farm Fresh Vegetables<br />
             <span style={{ color: '#A5D6A7' }}>From Our Village Farms</span><br />
             To Your Home 🌾
           </h1>
+
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, margin: '0 0 32px', maxWidth: 500, lineHeight: 1.6 }}>
-            Harvested at 5 AM · Delivered by 10 AM · Direct from Vizag farmers · Zero chemicals · Zero middlemen
+            Order Today by 8 PM · Harvested Tomorrow 5 AM · Delivered by 10 AM · Direct from Vizag farmers · Zero chemicals · Zero middlemen
           </p>
+
+          {/* Delivery badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#F9A825', padding: '8px 18px', borderRadius: 99, marginBottom: 24 }}>
+            <span style={{ fontSize: 16 }}>🛵</span>
+            <span style={{ color: '#1B5E20', fontWeight: 900, fontSize: 13 }}>
+              Order now → Delivered {getTomorrow()} by 10 AM
+            </span>
+          </div>
+
+          {/* CTA buttons */}
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
-            <button onClick={() => navigate('/subscribe')} style={{ padding: '16px 32px', borderRadius: 12, border: 'none', background: '#F9A825', color: '#1B5E20', fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 20px rgba(249,168,37,0.4)' }}>
+            <button onClick={() => navigate('/subscribe')}
+              style={{ padding: '16px 32px', borderRadius: 12, border: 'none', background: '#F9A825', color: '#1B5E20', fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 20px rgba(249,168,37,0.4)' }}>
               📦 Get Weekly Box
             </button>
-            <button onClick={() => navigate('/harvest')} style={{ padding: '16px 32px', borderRadius: 12, border: '2px solid rgba(255,255,255,0.4)', background: 'transparent', color: 'white', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
+            <button onClick={() => navigate('/harvest')}
+              style={{ padding: '16px 32px', borderRadius: 12, border: '2px solid rgba(255,255,255,0.4)', background: 'transparent', color: 'white', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
               🌿 Today's Harvest →
             </button>
           </div>
+
           {/* Countdown */}
           <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 16, padding: '16px 20px', display: 'inline-block' }}>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>ORDER CLOSES (SUNDAY 8 PM)</div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>
+              {isPastCutoff ? '⚠️ ORDER CLOSES TOMORROW 8 PM' : '⏰ ORDER CLOSES TODAY AT 8 PM'}
+            </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              {[{ v: pad(countdown.d), l: 'DAYS' }, { v: pad(countdown.h), l: 'HRS' }, { v: pad(countdown.m), l: 'MIN' }, { v: pad(countdown.s), l: 'SEC' }].map((t, i) => (
+              {[
+                { v: pad(countdown.h), l: 'HRS'  },
+                { v: pad(countdown.m), l: 'MIN'  },
+                { v: pad(countdown.s), l: 'SEC'  },
+              ].map((t, i) => (
                 <div key={t.l} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {i > 0 && <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 22, fontWeight: 900 }}>:</span>}
                   <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 12px', minWidth: 50, textAlign: 'center' }}>
@@ -144,7 +177,9 @@ export default function Home() {
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h2 style={{ fontWeight: 900, fontSize: 20, margin: 0, color: '#3E2723' }}>Shop By Category</h2>
-            <button onClick={() => navigate('/harvest')} style={{ background: 'none', border: 'none', color: '#2E7D32', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>View all <ChevronRight size={14}/></button>
+            <button onClick={() => navigate('/harvest')} style={{ background: 'none', border: 'none', color: '#2E7D32', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              View all <ChevronRight size={14}/>
+            </button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: 10 }} className="cat-grid">
             {CATEGORIES.map(c => (
@@ -166,13 +201,14 @@ export default function Home() {
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 16px', borderRadius: 99, fontSize: 11, fontWeight: 700 }}>WEEKLY SUBSCRIPTION</span>
             <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.6rem,4vw,2.4rem)', margin: '12px 0 8px', color: '#3E2723' }}>Choose Your Weekly Box</h2>
-            <p style={{ color: '#795548', fontSize: 14 }}>Farm fresh vegetables every Monday · Cancel anytime</p>
+            <p style={{ color: '#795548', fontSize: 14 }}>Order any day · Get it next morning by 10 AM · Cancel anytime</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }} className="plans-grid">
             {PLANS.map(p => (
-              <div key={p.id} style={{ background: 'white', borderRadius: 20, overflow: 'hidden', border: `2px solid ${p.id === 'medium' ? p.color : '#EFEBE9'}`, boxShadow: p.id === 'medium' ? `0 8px 32px ${p.color}33` : '0 2px 12px rgba(0,0,0,0.06)', transform: p.id === 'medium' ? 'scale(1.04)' : 'scale(1)', cursor: 'pointer', transition: 'all .2s' }}
-                onMouseEnter={e => { if (p.id !== 'medium') { e.currentTarget.style.transform = 'translateY(-4px)' } }}
-                onMouseLeave={e => { if (p.id !== 'medium') { e.currentTarget.style.transform = 'scale(1)' } }}>
+              <div key={p.id}
+                style={{ background: 'white', borderRadius: 20, overflow: 'hidden', border: `2px solid ${p.id === 'medium' ? p.color : '#EFEBE9'}`, boxShadow: p.id === 'medium' ? `0 8px 32px ${p.color}33` : '0 2px 12px rgba(0,0,0,0.06)', transform: p.id === 'medium' ? 'scale(1.04)' : 'scale(1)', cursor: 'pointer', transition: 'all .2s' }}
+                onMouseEnter={e => { if (p.id !== 'medium') e.currentTarget.style.transform = 'translateY(-4px)' }}
+                onMouseLeave={e => { if (p.id !== 'medium') e.currentTarget.style.transform = 'scale(1)' }}>
                 <div style={{ background: p.bg, padding: '24px 20px 16px', textAlign: 'center' }}>
                   <span style={{ background: p.color, color: 'white', fontSize: 10, fontWeight: 900, padding: '3px 12px', borderRadius: 99 }}>{p.tag}</span>
                   <div style={{ fontSize: 48, margin: '12px 0 6px' }}>{p.icon}</div>
@@ -184,7 +220,7 @@ export default function Home() {
                     <span style={{ fontSize: 13, color: '#aaa' }}>/week</span>
                   </div>
                   <div style={{ fontSize: 13, color: '#888', marginBottom: 14 }}>{p.items} · Up to {p.kg}</div>
-                  {[`${p.kg} fresh vegetables`, 'Monday delivery', 'Batch QR tracking', 'Free replacement'].map(f => (
+                  {[`${p.kg} fresh vegetables`, 'Next day delivery by 10 AM', 'Batch QR tracking', 'Free replacement'].map(f => (
                     <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 12, color: '#555' }}>
                       <span style={{ color: p.color, fontWeight: 900 }}>✓</span> {f}
                     </div>
@@ -205,7 +241,7 @@ export default function Home() {
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
             <span style={{ background: 'rgba(249,168,37,0.2)', color: '#F9A825', padding: '4px 16px', borderRadius: 99, fontSize: 11, fontWeight: 700 }}>HOW IT WORKS</span>
-            <h2 style={{ color: 'white', fontWeight: 900, fontSize: 'clamp(1.6rem,4vw,2.4rem)', margin: '12px 0 0' }}>Farm to Door in 4 Simple Steps</h2>
+            <h2 style={{ color: 'white', fontWeight: 900, fontSize: 'clamp(1.6rem,4vw,2.4rem)', margin: '12px 0 0' }}>Order Today · Fresh at Door Tomorrow</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 20 }} className="steps-grid">
             {STEPS.map((s, i) => (
@@ -226,11 +262,13 @@ export default function Home() {
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
             <div>
-              <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700 }}>FRESH TODAY</span>
-              <h2 style={{ fontWeight: 900, fontSize: 22, margin: '8px 0 4px', color: '#3E2723' }}>Today's Harvest 🌾</h2>
-              <p style={{ fontSize: 12, color: '#888', margin: 0 }}>Picked this morning from our village farms</p>
+              <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700 }}>ORDER NOW</span>
+              <h2 style={{ fontWeight: 900, fontSize: 22, margin: '8px 0 4px', color: '#3E2723' }}>Available Vegetables 🌾</h2>
+              <p style={{ fontSize: 12, color: '#888', margin: 0 }}>Order today · Delivered tomorrow by 10 AM</p>
             </div>
-            <button onClick={() => navigate('/harvest')} style={{ background: '#2E7D32', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>See All →</button>
+            <button onClick={() => navigate('/harvest')} style={{ background: '#2E7D32', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              Order Now →
+            </button>
           </div>
           {loading ? <div style={{ textAlign: 'center', padding: 40, fontSize: 40 }}>🌿</div> : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 14 }}>
@@ -278,7 +316,9 @@ export default function Home() {
             ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: 20 }}>
-            <button onClick={() => navigate('/farmers')} style={{ background: '#5D4037', color: 'white', border: 'none', padding: '12px 28px', borderRadius: 12, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Meet All Farmers →</button>
+            <button onClick={() => navigate('/farmers')} style={{ background: '#5D4037', color: 'white', border: 'none', padding: '12px 28px', borderRadius: 12, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              Meet All Farmers →
+            </button>
           </div>
         </div>
       </div>
@@ -314,9 +354,17 @@ export default function Home() {
       <div style={{ background: '#F9A825', padding: '40px 16px', textAlign: 'center' }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🧺</div>
-          <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: '#1B5E20', margin: '0 0 10px' }}>Ready for Farm Fresh Vegetables?</h2>
-          <p style={{ color: '#2E7D32', fontSize: 14, marginBottom: 24 }}>Join 500+ Vizag families getting fresh vegetables every Monday!</p>
-          <button onClick={() => navigate('/subscribe')} style={{ padding: '16px 40px', borderRadius: 12, border: 'none', background: '#1B5E20', color: 'white', fontWeight: 900, fontSize: 16, cursor: 'pointer' }}>
+          <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: '#1B5E20', margin: '0 0 10px' }}>
+            Order Today · Get Fresh Vegetables Tomorrow!
+          </h2>
+          <p style={{ color: '#2E7D32', fontSize: 14, marginBottom: 8 }}>
+            Join 500+ Vizag families — order by 8 PM, delivered by 10 AM next morning!
+          </p>
+          <p style={{ color: '#1B5E20', fontSize: 13, fontWeight: 700, marginBottom: 24 }}>
+            🛵 Next delivery: {getTomorrow()} by 10 AM
+          </p>
+          <button onClick={() => navigate('/subscribe')}
+            style={{ padding: '16px 40px', borderRadius: 12, border: 'none', background: '#1B5E20', color: 'white', fontWeight: 900, fontSize: 16, cursor: 'pointer' }}>
             Subscribe Now — Starting ₹399/week →
           </button>
         </div>
