@@ -361,7 +361,31 @@ export default function Home() {
           </div>
         </div>
       </div>
-
+      {/* ── TRACK ORDER ── */}
+      <div style={{ background: 'white', padding: '36px 16px', borderTop: '2px solid #EFEBE9' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+          <span style={{ background: '#E3F2FD', color: '#1565C0', padding: '4px 14px', borderRadius: 99, fontSize: 11, fontWeight: 700 }}>ORDER TRACKING</span>
+          <h2 style={{ fontWeight: 900, fontSize: 22, margin: '12px 0 6px', color: '#3E2723' }}>Track Your Delivery 🛵</h2>
+          <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Enter your order number to get live updates</p>
+          <div style={{ display: 'flex', gap: 8, maxWidth: 420, margin: '0 auto' }}>
+            <input id="track-input" placeholder="e.g. MH-001"
+              style={{ flex: 1, height: 48, padding: '0 16px', border: '1.5px solid #EFEBE9', borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'monospace' }}
+              onFocus={e => e.target.style.borderColor = '#2E7D32'}
+              onBlur={e => e.target.style.borderColor = '#EFEBE9'}
+              onKeyDown={e => { if (e.key === 'Enter') navigate(`/track?order=${e.target.value}`) }}
+            />
+            <button onClick={() => { const v = document.getElementById('track-input').value; if(v) navigate(`/track?order=${v}`) }}
+              style={{ height: 48, padding: '0 22px', borderRadius: 12, border: 'none', background: '#2E7D32', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+              Track →
+            </button>
+          </div>
+          <button onClick={() => navigate('/track')}
+            style={{ marginTop: 12, background: 'none', border: 'none', color: '#2E7D32', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+            View all my orders
+          </button>
+        </div>
+      </div>
+      
       {/* ── BOTTOM CTA ── */}
       <div style={{ background: '#F9A825', padding: '40px 16px', textAlign: 'center' }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>

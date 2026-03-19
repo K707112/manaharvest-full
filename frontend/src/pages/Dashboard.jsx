@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
 import { ordersAPI, usersAPI, subscriptionsAPI } from '../services/api'
-import { Package, CreditCard, MapPin, Clock, ChevronRight } from 'lucide-react'
+import { Package, CreditCard, MapPin, Clock, Gift, Star, Copy, Check, Truck } from 'lucide-react'
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
@@ -45,6 +45,7 @@ export default function Dashboard() {
 
   const tabs = [
     { id: 'orders',       label: 'My Orders',         icon: <Package size={16} /> },
+    { id: 'tracking',     label: 'Track Order',        icon: <Truck size={16}/> },
     { id: 'subscription', label: 'Subscription',      icon: <Clock size={16} /> },
     { id: 'wallet',       label: 'Wallet & Referral', icon: <CreditCard size={16} /> },
     { id: 'address',      label: 'Addresses',         icon: <MapPin size={16} /> },
@@ -177,6 +178,64 @@ export default function Dashboard() {
                         </span>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Tracking */}
+            {tab === 'tracking' && (
+              <div>
+                <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 22, fontWeight: 700, marginBottom: 16, color: '#3E2723' }}>Track Your Order 🛵</h2>
+                {orders.length === 0 ? (
+                  <div style={{ background: 'white', borderRadius: 16, padding: 40, textAlign: 'center', border: '1.5px solid #EFEBE9' }}>
+                    <div style={{ fontSize: 48, marginBottom: 12 }}>📦</div>
+                    <p style={{ color: '#888', marginBottom: 20 }}>No active orders to track.</p>
+                    <button onClick={() => navigate('/harvest')} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: '#2E7D32', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+                      Order Now →
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {orders.map(order => {
+                      const steps = ['confirmed','harvesting','packed','transit','delivered']
+                      const stepIdx = { pending:0, harvesting:1, packed:2, transit:3, delivered:4 }[order.status] ?? 0
+                      const pct = Math.round((stepIdx / 4) * 100)
+                      const icons = ['✅','🌾','📦','🛵','🎉']
+                      const labels = ['Confirmed','Harvesting','Packed','In Transit','Delivered']
+                      return (
+                        <div key={order.id} style={{ background: 'white', borderRadius: 16, overflow: 'hidden', border: '1.5px solid #EFEBE9', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                          <div style={{ background: 'linear-gradient(135deg,#1B5E20,#2E7D32)', padding: '16px 20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                              <span style={{ color: 'white', fontFamily: 'monospace', fontWeight: 700 }}>{order.order_number}</span>
+                              <span style={{ color: '#F9A825', fontWeight: 700, fontSize: 13 }}>₹{order.total}</span>
+                            </div>
+                            <div style={{ height: 5, background: 'rgba(255,255,255,0.2)', borderRadius: 99, overflow: 'hidden', marginBottom: 4 }}>
+                              <div style={{ height: '100%', background: '#F9A825', borderRadius: 99, width: `${pct}%`, transition: 'width 1s' }} />
+                            </div>
+                            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10 }}>{pct}% complete</div>
+                          </div>
+                          <div style={{ padding: '16px 20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+                              {labels.map((l, i) => (
+                                <div key={l} style={{ textAlign: 'center', flex: 1 }}>
+                                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: i <= stepIdx ? '#2E7D32' : '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 4px', fontSize: 14 }}>
+                                    {i < stepIdx ? '✓' : icons[i]}
+                                  </div>
+                                  <div style={{ fontSize: 9, color: i <= stepIdx ? '#2E7D32' : '#aaa', fontWeight: i === stepIdx ? 700 : 400 }}>{l}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ fontSize: 12, color: '#888', marginBottom: 10 }}>
+                              {order.order_items?.map(i => `${i.name} (${i.qty_kg}kg)`).join(', ')}
+                            </div>
+                            <button onClick={() => navigate(`/track?order=${order.order_number}`)}
+                              style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: '#E8F5E9', color: '#2E7D32', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                              View Full Tracking →
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
