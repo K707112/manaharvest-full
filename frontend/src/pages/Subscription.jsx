@@ -4,18 +4,18 @@ import { useNavigate } from 'react-router-dom'
 const PLANS = [
   {
     id: 'small', price: 399, name: 'Small Family', icon: '🥬',
-    vegetables: 7, maxKg: 5, color: '#1565C0', bg: '#E3F2FD',
-    features: ['7 seasonal vegetables', '4–5 kg total weight', 'Weekly Monday delivery', 'Free replacement guarantee', 'Batch transparency'],
+    vegetables: 8, maxKg: 9, color: '#1565C0', bg: '#E3F2FD',
+    features: ['8 seasonal vegetables', '9 kg total weight', 'Weekly Monday delivery', 'Free replacement guarantee', 'Batch transparency'],
   },
   {
     id: 'medium', price: 699, name: 'Medium Family', icon: '🧺', badge: 'Most Popular',
-    vegetables: 9, maxKg: 9, color: '#2E7D32', bg: '#E8F5E9',
-    features: ['9 seasonal vegetables', '8–9 kg total weight', 'Weekly Monday delivery', 'Free replacement guarantee', 'WhatsApp order updates', 'Bonus herb bunch every week'],
+    vegetables: 10, maxKg: 18, color: '#2E7D32', bg: '#E8F5E9',
+    features: ['10 seasonal vegetables', '18 kg total weight', 'Weekly Monday delivery', 'Free replacement guarantee', 'WhatsApp order updates', 'Bonus herb bunch every week'],
   },
   {
     id: 'large', price: 999, name: 'Large Family', icon: '🏡',
-    vegetables: 10, maxKg: 15, color: '#6A1B9A', bg: '#F3E5F5',
-    features: ['10+ seasonal vegetables', '14–15 kg total weight', 'Weekly Monday delivery', 'Priority customer support', 'Farmer meet-and-greet invite', 'Early access to new produce'],
+    vegetables: 15, maxKg: 24, color: '#6A1B9A', bg: '#F3E5F5',
+    features: ['15+ seasonal vegetables', '24 kg total weight', 'Weekly Monday delivery', 'Priority customer support', 'Farmer meet-and-greet invite', 'Early access to new produce'],
   },
 ]
 
