@@ -100,7 +100,6 @@ export async function verifyOtp(req, res, next) {
     let isNewUser = false
 
     if (!user) {
-      // New user — create account
       isNewUser = true
       let referrerId = null
 
@@ -138,7 +137,6 @@ export async function verifyOtp(req, res, next) {
       }
     }
 
-    // Update last login + save password if not set yet
     const updates = { last_login_at: new Date().toISOString() }
     if (password && !user.password_hash) {
       updates.password_hash = await bcrypt.hash(password, 10)
@@ -206,6 +204,67 @@ export async function loginWithPassword(req, res, next) {
         referral_code:  user.referral_code,
       },
       tokens: { access, refresh },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /auth/register — Direct signup without OTP
+export async function registerDirect(req, res, next) {
+  try {
+    const { name, phone, password } = req.body
+
+    if (!name || !phone || !password)
+      throw new AppError('Name, phone and password are required', 400)
+
+    if (password.length < 6)
+      throw new AppError('Password must be at least 6 characters', 400)
+
+    // Check if phone already exists
+    const { data: existing } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('phone', phone)
+      .single()
+
+    if (existing)
+      throw new AppError('Phone already registered. Please login.', 400)
+
+    const password_hash = await bcrypt.hash(password, 10)
+
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .insert({
+        name,
+        phone,
+        password_hash,
+        referral_code:  generateReferralCode(),
+        role:           'customer',
+        is_active:      true,
+        wallet_balance: 0,
+        loyalty_points: 0,
+        created_at:     new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    const { access, refresh } = signTokens(user.id)
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id:            user.id,
+          name:          user.name,
+          phone:         user.phone,
+          role:          user.role,
+          referral_code: user.referral_code,
+        },
+        token: access,
+      }
     })
   } catch (err) {
     next(err)

@@ -30,7 +30,7 @@ export default function Contact() {
           <div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Contact Information</h2>
             {[
-              { icon: '📞', label: 'Phone', value: '+91 96185 82513', link: 'tel:+919618582513' },
+              { icon: '📞', label: 'Phone', value: '+91 7075573757', link: 'tel:+917075573757' },
               { icon: '📧', label: 'Email', value: 'hello@manaharvest.in', link: 'mailto:hello@manaharvest.in' },
               { icon: '📍', label: 'Location', value: 'Visakhapatnam, Andhra Pradesh', link: null },
               { icon: '⏰', label: 'Working Hours', value: 'Mon–Sat: 6 AM – 8 PM', link: null },

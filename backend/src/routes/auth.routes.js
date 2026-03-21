@@ -8,6 +8,7 @@ import {
   refreshToken,
   logout,
   loginWithPassword,
+  registerDirect,
 } from '../controllers/auth.controller.js'
 import { authenticate } from '../middleware/auth.js'
 
@@ -36,6 +37,15 @@ router.post('/login',
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   validate,
   loginWithPassword
+)
+
+// POST /auth/register  — direct signup without OTP
+router.post('/register',
+  body('name').isString().trim().notEmpty().withMessage('Name is required'),
+  body('phone').isMobilePhone('en-IN').withMessage('Valid Indian phone number required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  validate,
+  registerDirect
 )
 
 // POST /auth/token/refresh  — get new access token
