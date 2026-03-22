@@ -146,7 +146,7 @@ export default function Footer() {
 
           {/* Visitor counter */}
           {visitors && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', padding: '5px 14px', borderRadius: 99, color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)', padding: '5px 14px', borderRadius: 99, color: 'white', fontSize: 12, fontWeight: 600 }}>
               👥 {visitors.toLocaleString('en-IN')} visitors
             </span>
           )}
