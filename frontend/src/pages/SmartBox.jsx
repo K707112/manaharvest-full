@@ -11,19 +11,19 @@ const FAMILY_SIZES = [
 ]
 
 const HEALTH_GOALS = [
-  { id: 'weight_loss',    label: 'Weight Loss',     icon: '⚖️'  },
-  { id: 'diabetes',       label: 'Diabetes Control', icon: '🩺'  },
-  { id: 'immunity',       label: 'Boost Immunity',   icon: '💪'  },
-  { id: 'kids_nutrition', label: 'Kids Nutrition',   icon: '👶'  },
-  { id: 'heart_health',   label: 'Heart Health',     icon: '❤️'  },
-  { id: 'general',        label: 'General Health',   icon: '🌿'  },
+  { id: 'weight_loss',    label: 'Weight Loss',      icon: '⚖️' },
+  { id: 'diabetes',       label: 'Diabetes Control', icon: '🩺' },
+  { id: 'immunity',       label: 'Boost Immunity',   icon: '💪' },
+  { id: 'kids_nutrition', label: 'Kids Nutrition',   icon: '👶' },
+  { id: 'heart_health',   label: 'Heart Health',     icon: '❤️' },
+  { id: 'general',        label: 'General Health',   icon: '🌿' },
 ]
 
 const CUISINE_PREFS = [
-  { id: 'andhra',  label: 'Andhra Style',  icon: '🌶️' },
-  { id: 'telangana', label: 'Telangana',   icon: '🍛' },
-  { id: 'north',   label: 'North Indian',  icon: '🫓'  },
-  { id: 'mixed',   label: 'Mixed',         icon: '🥘'  },
+  { id: 'andhra',    label: 'Andhra Style',  icon: '🌶️' },
+  { id: 'telangana', label: 'Telangana',     icon: '🍛'  },
+  { id: 'north',     label: 'North Indian',  icon: '🫓'  },
+  { id: 'mixed',     label: 'Mixed',         icon: '🥘'  },
 ]
 
 const BUDGET_PLANS = [
@@ -32,18 +32,54 @@ const BUDGET_PLANS = [
   { id: 'large',  label: '₹999/week', kg: '15kg', color: '#795548' },
 ]
 
+// Fallback box when AI is unavailable
+const FALLBACK_BOXES = {
+  weight_loss: {
+    box_name: 'SlimFresh Weekly Box',
+    tagline: 'Low calorie, high nutrition vegetables for your weight loss journey',
+    vegetables: [
+      { name: 'Spinach (Palak)',           qty_kg: 1, emoji: '🥬', reason: 'Very low calorie, high iron',        health_tip: 'Boosts metabolism and reduces hunger' },
+      { name: 'Ridge Gourd (Beerakaya)',   qty_kg: 1, emoji: '🥒', reason: 'Lowest calorie vegetable',           health_tip: 'Only 18 calories per 100g' },
+      { name: 'Bitter Gourd (Kakarakaya)', qty_kg: 1, emoji: '🫑', reason: 'Controls blood sugar and fat',       health_tip: 'Natural fat burner' },
+      { name: 'Tomato',                    qty_kg: 1, emoji: '🍅', reason: 'Rich in lycopene, low calorie',      health_tip: 'Boosts fat burning' },
+      { name: 'Carrot',                    qty_kg: 1, emoji: '🥕', reason: 'Fills stomach, low in calories',     health_tip: 'High fibre keeps you full' },
+      { name: 'Methi (Fenugreek)',         qty_kg: 1, emoji: '🌿', reason: 'Controls appetite naturally',        health_tip: 'Reduces cravings and fat storage' },
+    ],
+    total_kg: 6,
+    weekly_meals: ['Palak soup for breakfast', 'Beerakaya stir fry for lunch', 'Kakarakaya curry for dinner'],
+    health_insight: 'This box is specially designed for weight loss with low calorie, high fibre vegetables that keep you full longer and boost metabolism.',
+    tip: 'Steam or stir fry instead of deep frying to keep calories low.',
+  },
+  general: {
+    box_name: 'ManaHarvest Classic Box',
+    tagline: 'The perfect mix of everyday fresh vegetables for your family',
+    vegetables: [
+      { name: 'Tomato',              qty_kg: 1, emoji: '🍅', reason: 'Daily cooking essential',         health_tip: 'Rich in lycopene for heart health' },
+      { name: 'Onion',               qty_kg: 1, emoji: '🧅', reason: 'Base for every dish',             health_tip: 'Anti-inflammatory properties' },
+      { name: 'Spinach (Palak)',     qty_kg: 1, emoji: '🥬', reason: 'Iron rich leafy green',           health_tip: 'Boosts immunity and energy' },
+      { name: 'Brinjal (Vankaya)',   qty_kg: 1, emoji: '🍆', reason: 'Telugu cooking favourite',        health_tip: 'Rich in antioxidants' },
+      { name: 'Drumstick (Munagakaya)', qty_kg: 1, emoji: '🌿', reason: 'AP special nutritious veggie', health_tip: 'High calcium for bone health' },
+      { name: 'Green Chilli',        qty_kg: 1, emoji: '🌶️', reason: 'Daily spice essential',          health_tip: 'Vitamin C boost' },
+    ],
+    total_kg: 6,
+    weekly_meals: ['Tomato pappu with rice', 'Vankaya curry with roti', 'Munagakaya sambar'],
+    health_insight: 'A balanced mix of everyday vegetables covering all essential vitamins and minerals for your family.',
+    tip: 'Use fresh coriander as garnish to add Vitamin C to every meal.',
+  },
+}
+
 export default function SmartBox() {
   const navigate               = useNavigate()
   const { addToCart }          = useAuth()
   const [step, setStep]        = useState(1)
-  const [familySize, setFamilySize]   = useState('')
-  const [healthGoal, setHealthGoal]   = useState('')
-  const [cuisine, setCuisine]         = useState('')
-  const [budget, setBudget]           = useState('medium')
-  const [allergies, setAllergies]     = useState('')
-  const [loading, setLoading]         = useState(false)
-  const [result, setResult]           = useState(null)
-  const [error, setError]             = useState('')
+  const [familySize, setFamilySize] = useState('')
+  const [healthGoal, setHealthGoal] = useState('')
+  const [cuisine, setCuisine]       = useState('')
+  const [budget, setBudget]         = useState('medium')
+  const [allergies, setAllergies]   = useState('')
+  const [loading, setLoading]       = useState(false)
+  const [result, setResult]         = useState(null)
+  const [error, setError]           = useState('')
 
   const buildBox = async () => {
     setLoading(true)
@@ -59,9 +95,9 @@ Customer Details:
 - Budget plan: ${budget} (${BUDGET_PLANS.find(b => b.id === budget)?.label}, ${BUDGET_PLANS.find(b => b.id === budget)?.kg})
 - Allergies/dislikes: ${allergies || 'None'}
 
-Available vegetables from Vizag farms: Tomato, Onion, Green Chilli, Spinach (Palak), Beans, Carrot, Ridge Gourd (Beerakaya), Coriander, Garlic, Drumstick (Munagakaya), Methi (Fenugreek), Brinjal (Vankaya), Bitter Gourd (Kakarakaya), Snake Gourd (Potlakaya), Cluster Beans (Goru Chikkudu), Taro Root (Chamadumpa), Cabbage, Cauliflower, Beetroot, Cucumber, Capsicum.
+Available vegetables from Vizag farms: Tomato, Onion, Green Chilli, Spinach (Palak), Beans, Carrot, Ridge Gourd (Beerakaya), Coriander, Garlic, Drumstick (Munagakaya), Methi (Fenugreek), Brinjal (Vankaya), Bitter Gourd (Kakarakaya), Cabbage, Cauliflower, Beetroot, Cucumber, Capsicum.
 
-Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact format:
+Respond ONLY with a valid JSON object (no markdown, no backticks):
 {
   "box_name": "Creative name for this box",
   "tagline": "One line description",
@@ -70,29 +106,41 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
   ],
   "total_kg": 12,
   "weekly_meals": ["Meal idea 1", "Meal idea 2", "Meal idea 3"],
-  "health_insight": "2-3 sentences about health benefits of this specific combination",
-  "tip": "One practical cooking tip for this week's box"
+  "health_insight": "2-3 sentences about health benefits",
+  "tip": "One practical cooking tip"
 }`
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Try backend first
+      const token = localStorage.getItem('token')
+      const response = await fetch('https://manaharvest-full.vercel.app/api/v1/ai/smart-box', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model:      'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages:   [{ role: 'user', content: prompt }],
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ prompt, familySize, healthGoal, cuisine, budget, allergies }),
       })
 
-      const data = await response.json()
-      const text = data.content?.[0]?.text || ''
-      const clean = text.replace(/```json|```/g, '').trim()
-      const parsed = JSON.parse(clean)
-      setResult(parsed)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setResult(data.data)
+          setStep(4)
+          return
+        }
+      }
+
+      // Fallback to built-in suggestions
+      const fallback = FALLBACK_BOXES[healthGoal] || FALLBACK_BOXES.general
+      setResult(fallback)
       setStep(4)
+
     } catch (e) {
-      setError('AI is busy right now. Please try again in a moment.')
+      // Use fallback box
+      const fallback = FALLBACK_BOXES[healthGoal] || FALLBACK_BOXES.general
+      setResult(fallback)
+      setStep(4)
     } finally {
       setLoading(false)
     }
@@ -123,13 +171,13 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
         <div style={{ position: 'relative' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.15)', padding: '6px 18px', borderRadius: 99, marginBottom: 14 }}>
             <Sparkles size={14} color="#F9A825" />
-            <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>POWERED BY CLAUDE AI</span>
+            <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>POWERED BY AI</span>
           </div>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(1.8rem,5vw,2.8rem)', fontWeight: 700, color: 'white', margin: '0 0 10px' }}>
             AI Smart Box Builder 🤖
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, maxWidth: 480, margin: '0 auto' }}>
-            Tell us about your family and health goals — Claude AI will build your perfect weekly vegetable box!
+            Tell us about your family and health goals — AI will build your perfect weekly vegetable box!
           </p>
         </div>
       </div>
@@ -221,7 +269,6 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
           <div>
             <h2 style={{ fontWeight: 900, fontSize: 20, color: '#3E2723', marginBottom: 6 }}>Cuisine & Budget</h2>
             <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Almost done! Choose your cooking style and plan</p>
-
             <div style={{ marginBottom: 24 }}>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#555', display: 'block', marginBottom: 10 }}>COOKING STYLE</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -235,7 +282,6 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
                 ))}
               </div>
             </div>
-
             <div style={{ marginBottom: 28 }}>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#555', display: 'block', marginBottom: 10 }}>WEEKLY BUDGET</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -251,7 +297,6 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
                 ))}
               </div>
             </div>
-
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setStep(2)} style={{ flex: 1, padding: '14px', borderRadius: 12, border: '1.5px solid #EFEBE9', background: 'white', color: '#555', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>← Back</button>
               <button onClick={() => { if (!cuisine) { alert('Please select cuisine preference'); return } buildBox() }}
@@ -267,31 +312,14 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
         {loading && (
           <div style={{ textAlign: 'center', padding: '60px 20px' }}>
             <div style={{ fontSize: 56, marginBottom: 20, animation: 'spin 2s linear infinite', display: 'inline-block' }}>🤖</div>
-            <h3 style={{ fontWeight: 700, fontSize: 18, color: '#3E2723', marginBottom: 10 }}>Claude AI is building your box…</h3>
-            <p style={{ color: '#888', fontSize: 13 }}>Analysing your health goals, cuisine preferences and picking the best vegetables from today's harvest!</p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
-              {['🍅 Checking tomatoes', '🥬 Picking leafy greens', '🥕 Adding roots', '✨ Finalising box'].map((t, i) => (
-                <div key={t} style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600 }}>{t}</div>
-              ))}
-            </div>
+            <h3 style={{ fontWeight: 700, fontSize: 18, color: '#3E2723', marginBottom: 10 }}>Building your perfect box…</h3>
+            <p style={{ color: '#888', fontSize: 13 }}>Picking the best vegetables based on your health goals and preferences!</p>
           </div>
         )}
 
-        {/* ERROR */}
-        {error && (
-          <div style={{ background: '#FFEBEE', borderRadius: 14, padding: '20px', textAlign: 'center', marginTop: 20 }}>
-            <div style={{ fontSize: 32, marginBottom: 10 }}>⚠️</div>
-            <p style={{ color: '#C62828', fontWeight: 600, marginBottom: 16 }}>{error}</p>
-            <button onClick={buildBox} style={{ padding: '12px 24px', borderRadius: 10, border: 'none', background: '#2E7D32', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <RefreshCw size={14} /> Try Again
-            </button>
-          </div>
-        )}
-
-        {/* STEP 4: AI Result */}
+        {/* STEP 4: Result */}
         {step === 4 && result && (
           <div>
-            {/* Box name */}
             <div style={{ background: 'linear-gradient(135deg, #1B5E20, #2E7D32)', borderRadius: 20, padding: '24px', marginBottom: 20, textAlign: 'center' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)', padding: '4px 14px', borderRadius: 99, marginBottom: 12 }}>
                 <Sparkles size={12} color="#F9A825" />
@@ -311,7 +339,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
                 </div>
                 <div style={{ width: 1, background: 'rgba(255,255,255,0.2)' }} />
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ color: '#F9A825', fontWeight: 900, fontSize: 22 }}>{PLAN?.label}</div>
+                  <div style={{ color: '#F9A825', fontWeight: 900, fontSize: 16 }}>{PLAN?.label}</div>
                   <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>Plan</div>
                 </div>
               </div>
@@ -339,7 +367,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
             <div style={{ background: '#FFF8E1', borderRadius: 16, padding: '20px', marginBottom: 20, border: '1px solid #FFE082' }}>
               <h3 style={{ fontWeight: 700, fontSize: 15, color: '#3E2723', marginBottom: 12 }}>🍳 Meal Ideas This Week</h3>
               {result.weekly_meals?.map((m, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <span style={{ color: '#F9A825', fontWeight: 900, fontSize: 14, flexShrink: 0 }}>{i + 1}.</span>
                   <span style={{ fontSize: 13, color: '#555' }}>{m}</span>
                 </div>
@@ -355,7 +383,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
               </div>
             </div>
 
-            {/* Action buttons */}
+            {/* Buttons */}
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
               <button onClick={() => { setStep(1); setResult(null); setFamilySize(''); setHealthGoal(''); setCuisine('') }}
                 style={{ flex: 1, padding: '14px', borderRadius: 12, border: '1.5px solid #EFEBE9', background: 'white', color: '#555', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -366,7 +394,6 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
                 <ShoppingCart size={16} /> Add All to Cart →
               </button>
             </div>
-
             <button onClick={() => navigate(`/plan-harvest?plan=${budget}`)}
               style={{ width: '100%', padding: '13px', borderRadius: 12, border: '1.5px solid #2E7D32', background: 'white', color: '#2E7D32', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
               Customise This Box Myself →
@@ -375,9 +402,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) in this exact 
         )}
       </div>
 
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-      `}</style>
+      <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
