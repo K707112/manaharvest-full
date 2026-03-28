@@ -1,9 +1,11 @@
 // src/App.jsx
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Navbar from './components/Navbar'
 import BottomNav from './components/BottomNav'
 import Footer from './components/Footer'
+import InstallPrompt from './components/InstallPrompt'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Harvest from './pages/Harvest'
@@ -23,9 +25,12 @@ function Layout({ children, hideFooter }) {
   return (
     <>
       <Navbar />
-      <main>{children}</main>
+      <main style={{ minHeight: '100vh', paddingTop: 'var(--nav-height)', background: 'var(--bg-secondary)' }}>
+        {children}
+      </main>
       {!hideFooter && <Footer />}
       <BottomNav />
+      <InstallPrompt />
     </>
   )
 }
@@ -33,24 +38,26 @@ function Layout({ children, hideFooter }) {
 export default function App() {
   return (
     <HashRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login"          element={<Login />} />
-          <Route path="/"               element={<Layout><Home /></Layout>} />
-          <Route path="/harvest"        element={<Layout><Harvest /></Layout>} />
-          <Route path="/farmers"        element={<Layout><Farmers /></Layout>} />
-          <Route path="/subscribe"      element={<Layout><Subscriptions /></Layout>} />
-          <Route path="/plan-harvest"   element={<Layout hideFooter><PlanHarvest /></Layout>} />
-          <Route path="/smart-box"      element={<Layout><SmartBox /></Layout>} />
-          <Route path="/track"          element={<Layout><Tracking /></Layout>} />
-          <Route path="/dashboard"      element={<Layout><Dashboard /></Layout>} />
-          <Route path="/cart"           element={<Layout><Cart /></Layout>} />
-          <Route path="/contact"        element={<Layout><Contact /></Layout>} />
-          <Route path="/admin"          element={<Admin />} />
-          <Route path="/admin/orders"   element={<AdminOrders />} />
-          <Route path="/batch/:batchId" element={<Layout><BatchInfo /></Layout>} />
-        </Routes>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login"          element={<Login />} />
+            <Route path="/"               element={<Layout><Home /></Layout>} />
+            <Route path="/harvest"        element={<Layout><Harvest /></Layout>} />
+            <Route path="/farmers"        element={<Layout><Farmers /></Layout>} />
+            <Route path="/subscribe"      element={<Layout><Subscriptions /></Layout>} />
+            <Route path="/plan-harvest"   element={<Layout hideFooter><PlanHarvest /></Layout>} />
+            <Route path="/smart-box"      element={<Layout><SmartBox /></Layout>} />
+            <Route path="/track"          element={<Layout><Tracking /></Layout>} />
+            <Route path="/dashboard"      element={<Layout><Dashboard /></Layout>} />
+            <Route path="/cart"           element={<Layout><Cart /></Layout>} />
+            <Route path="/contact"        element={<Layout><Contact /></Layout>} />
+            <Route path="/admin"          element={<Admin />} />
+            <Route path="/admin/orders"   element={<AdminOrders />} />
+            <Route path="/batch/:batchId" element={<Layout><BatchInfo /></Layout>} />
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
     </HashRouter>
   )
 }
